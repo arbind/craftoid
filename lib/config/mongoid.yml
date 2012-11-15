@@ -1,0 +1,14 @@
+development:
+  identity_map_enabled: true
+  host: localhost
+  database: craftoid_dev
+
+test:
+  identity_map_enabled: true
+  host: localhost
+  database: craftoid_test
+
+# set these environment variables on your prod server
+production:
+  identity_map_enabled: true
+  uri: <%= MONGO_URI %>
