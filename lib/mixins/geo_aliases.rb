@@ -1,26 +1,46 @@
 module GeoAliases
+
+  class << self
+    def clear_geocoder_cache
+      Geocoder.cache.expire(:all) # expire all cached results
+    end
+  end
+
   # geocoding  aliases
+  def ip_address
+   address
+  end
+  def ip_address=(val)
+    self.address=ip_address
+  end
 
-  def ip_address() address end
-  def ip_address=(val) self.address=ip_address end
-
-  def latitude() coordinates.last end
+  def latitude
+    coordinates.last
+  end
   alias_method :lat, :latitude
 
-  def latitude=(lat) coordinates ||= [0,0]; coordinates[1] = lat end
+  def latitude=(lat)
+    coordinates ||= [0,0]; coordinates[1] = lat
+  end
   alias_method :lat=, :latitude=
 
-  def longitude() coordinates.first end
+  def longitude
+    coordinates.first
+  end
   alias_method :lng, :longitude
   alias_method :long, :longitude
 
-  def longitude=(lng) coordinates[0] = lng end
+  def longitude=(lng)
+    coordinates[0] = lng
+  end
   alias_method :lng=, :longitude=
   alias_method :long=, :longitude=
   # /geocoding  aliases
 
   # geo point hash representation
-  def geo_point() { lat:lat, lng:lng } end
+  def geo_point
+   { lat:lat, lng:lng }
+  end
   def geo_point=(latlng_hash)
     lt   = latlng_hash[:latitude]   if latlng_hash[:latitude].present?
     lt ||= latlng_hash[:lat]        if latlng_hash[:lat].present?

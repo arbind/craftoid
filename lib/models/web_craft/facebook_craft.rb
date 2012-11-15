@@ -30,6 +30,8 @@ class FacebookCraft < WebCraft
   alias_method :about, :description
   alias_method :about=, :description=
 
-  def self.provider_key() 'fb' end
+  def self.provider_key
+    'fb'
+  end
   
 end

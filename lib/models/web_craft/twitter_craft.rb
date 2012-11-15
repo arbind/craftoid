@@ -49,9 +49,13 @@ class TwitterCraft < WebCraft
   alias_method :protected, :is_protected
   alias_method :protected=, :is_protected=
 
-  def self.provider_key() '@' end
+  def self.provider_key
+    '@'
+  end
 
-  def id_for_fetching() screen_name end
+  def id_for_fetching
+    screen_name
+  end
 end
 
 

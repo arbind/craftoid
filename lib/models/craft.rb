@@ -63,27 +63,53 @@ class Craft
     # crafts = Craft.all.reject{|c| c.twitter_craft.present?} # find all crafts with missing twitter webcrafts
   end
 
-  def tweet_stream_id() twitter.present? ? twitter.tweet_stream_id : nil end
+  def tweet_stream_id
+    twitter_craft.present? ? twitter_craft.tweet_stream_id : nil
+  end
 
-  def is_for_mobile_cuisine?() is_in_essence_tags(:mobile_cuisine, add_it) end
+  def is_mobile?
+    is_mobile
+  end
 
-  def is_mobile?() is_mobile end
+  def is_for_mobile_cuisine?
+    has_essence(:mobile_cuisine)
+  end
 
-  def is_for_food?() has_essence(:food) end
-  def is_for_fitness?() has_essence(:fitness) end
-  def is_for_fun?() has_essence(:fun) end
-  def is_for_home?() has_essence(:home) end
+  def is_for_food?
+    has_essence(:food)
+  end
+  def is_for_fitness?
+    has_essence(:fitness)
+  end
+  def is_for_fun?
+    has_essence(:fun)
+  end
+  def is_for_home?
+    has_essence(:home)
+  end
 
   alias_method :is_for_food_truck?, :is_for_mobile_cuisine?
   alias_method :is_for_foodtruck?, :is_for_mobile_cuisine?
 
-  def has_essence(essence) has_tag(:essence, essence_tag) end
-  def add_essence(essence_tag) add_tag(:essence, essence_tag) end
-  def remove_essence(essence_tag) remove_tag(:essence, essence_tag) end
+  def has_essence(essence)
+    has_tag(:essence, essence_tag)
+  end
+  def add_essence(essence_tag)
+    add_tag(:essence, essence_tag)
+  end
+  def remove_essence(essence_tag)
+    remove_tag(:essence, essence_tag)
+  end
 
-  def has_theme(theme) has_tag(:theme, theme_tag) end
-  def add_theme(theme_tag) add_tag(:theme, theme_tag) end
-  def remove_theme(theme_tag) remove_tag(:theme, theme_tag) end
+  def has_theme(theme)
+    has_tag(:theme, theme_tag)
+  end
+  def add_theme(theme_tag)
+    add_tag(:theme, theme_tag)
+  end
+  def remove_theme(theme_tag)
+    remove_tag(:theme, theme_tag)
+  end
 
   def map_pins
     {

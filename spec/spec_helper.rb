@@ -1,5 +1,8 @@
+# set up test coverage
 require 'simplecov'
-SimpleCov.start
+SimpleCov.start do
+  minimum_coverage 100
+end
 
 require 'Craftoid'
 
