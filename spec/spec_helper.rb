@@ -1,3 +1,6 @@
+# setup for test environment
+ENV['RACK_ENV'] = 'test'
+
 # set up test coverage
 require 'simplecov'
 SimpleCov.start do
@@ -6,6 +9,6 @@ end
 
 require 'Craftoid'
 
-# config.before do
-#   Mongoid.purge!
-# end
+# start fresh before each test
+Mongoid.purge!
+#+++ TODO - be sure to select test database for redis 
