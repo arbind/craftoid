@@ -7,5 +7,5 @@ class WebsiteCraft < WebCraft
   embedded_in :craft
 
   alias_method :url, :web_craft_id   # use the website's url as its :web_craft_id
-  
+
 end

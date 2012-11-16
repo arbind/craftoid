@@ -4,42 +4,25 @@ class WebCraft
   include Geocoder::Model::Mongoid
   include GeoAliases
 
+  # provider info
   field :web_craft_id
-  field :href # url to this provider's account
   field :username
+  field :href # url to page on provider's site  - e.g. facebook.com/pages/:web_craft
 
+  # web_craft info
   field :name
   field :description
-  field :website # url to craft's actual website
-
+  field :website # craft's actual website
   field :location_hash
   field :address, default: nil
-  field :coordinates, type: Array, default: [] # does geocoder gem auto index this?
-
-  # field :id_tags, index: true # e.g. facebook_id, yelp_id, twitter_id etc. should be aliased to this field for a normalized id 
-  # field :username_tags, index: true  # e.g. username, twitter_handle
-  # field :href_tags, type: Array, default: []
-  # field :search_tags, type: Array, default: []
-  # index :web_craft_id
-  # index :username
-  # index :href_tags
-  # index :search_tags
-  # scope :yelp_crafts,     where(provider: :yelp)
-  # scope :flickr_crafts,   where(provider: :flickr)
-  # scope :webpage_crafts,  where(provider: :webpage)
-  # scope :twitter_crafts,  where(provider: :twitter)
-  # scope :facebook_crafts, where(provider: :facebook)
-  # scope :you_tube_crafts, where(provider: :you_tube)
-  # scope :google_plus_crafts, where(provider: :google_plus)
+  field :coordinates, type: Array, default: []
 
   geocoded_by :address
   reverse_geocoded_by :coordinates
 
-  alias_method :user_name, :username
-  alias_method :user_name=, :username=
-
+  after_initialize :format_attributes
   before_save :format_attributes
-  before_save :geocode_this_location! # auto-fetch coordinates
+  before_save :geocode_this_location!
 
   # convert classname to provider name: e.g. TwitterCraft -> :twitter
   def self.provider
@@ -48,33 +31,32 @@ class WebCraft
   def self.provider_key
     name[0..-6].downcase
   end
-
-  # get the service class for this craft: e.g. TwitterCraft -> TwitterService
-  def self.web_craft_service_class
-    @@web_craft_service_class ||= Kernel.const_get("#{name[0..-6]}Service")
-  end
-  def web_craft_service_class
-    self.class.web_craft_service_class
+  def self.web_craft_type
+    name.underscore # e.g. twitter_craft, yelp_craft, facebook_craft, website_craft, etc.
   end
 
   def self.materialize(web_craft_hash)
     wc_id = web_craft_hash[:web_craft_id] || web_craft_hash['web_craft_id']
     return nil if wc_id.nil?
 
-    # web_craft = find_or_initialize_by(web_craft_id: "#{wc_id}")
-    # web_craft.update_attributes(web_craft_hash) if web_craft
-    new (web_craft_hash)
-    # web_craft
+    wc_id = wc_id.to_s # make sure web_craft_id is a String prior to looking it up
+    web_craft = materialize_for_web_craft_id(wc_id)
+    
+    # assign all the attributes
+    subject_attributes = web_craft_hash.deep_dup
+    subject_attributes.delete(:web_craft_id)
+    subject_attributes.delete('web_craft_id')
+    subject_attributes[:web_craft_id] = wc_id
+
+    web_craft.assign_attributes(subject_attributes)
+    web_craft
   end
 
-  # fetch and pull
-  def self.fetch(web_craft_id)
-    web_craft_service_class.fetch(web_craft_id)
+  def self.materialize_for_web_craft_id(wc_id)
+    craft = Craft.where('#{web_craft_type}.web_craft_id' => wc_id).first
+    return craft[web_craft_type] if craft
+    return new({web_craft_id: wc_id})
   end
-  def self.pull(web_craft_id)
-    web_craft_service_class.pull(web_craft_id)
-  end
-  # /fetch and pull
 
   def provider
     self.class.provider
@@ -82,22 +64,13 @@ class WebCraft
   def provider_key
     self.class.provider_key
   end
-
   def id_for_fetching
     web_craft_id
-  end
-  def fetch
-    web_craft_service_class.fetch(web_craft_id)
-  end
-  def pull
-    web_craft_hash = web_craft_service_class.fetch(id_for_fetching)
-    # calculate_tags!(web_craft_hash)
-    update_attributes(web_craft_hash)
   end
 
   private
   def format_attributes
-    self.web_craft_id = "#{web_craft_id}" unless web_craft_id.kind_of? String
+    self.web_craft_id = web_craft_id.to_s
     # urlify
     self.website = website.downcase.urlify! if website.looks_like_url?
     self.href = href.downcase.urlify! if href.looks_like_url?

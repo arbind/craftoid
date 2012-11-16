@@ -17,7 +17,6 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib", "lib/config"]
 
-  gem.add_runtime_dependency 'uri'
   gem.add_runtime_dependency 'redis'
   gem.add_runtime_dependency 'geocoder'
   gem.add_runtime_dependency 'mongoid', '2.4.8'

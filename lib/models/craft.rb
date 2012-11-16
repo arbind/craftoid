@@ -8,7 +8,6 @@ class Craft
 
   field :ranking_score, type: Integer, default: 0
 
-
   # geocoder fields
   # mongoid stores [long, lat] - which is backwards from normal convention
   # geocoder knows this, but expects [lat, lng]
@@ -41,6 +40,16 @@ class Craft
   reverse_geocoded_by :coordinates
   before_save :geocode_this_location! # auto-fetch coordinates
 
+  # +++ TODO: add scopes
+  # scope with_twitter_craft
+  # scope without_twitter_craft
+  # scope with_yelp_craft
+  # scope without_yelp_craft
+  # scope with_facebook_craft
+  # scope without_facebook_craft
+  # scope with_website_craft
+  # scope without_website_craft
+
   ### SCORE
   #     The smallest score you can set is 0, the largest is 1 Billion
   #     ranking_score is represented as a negative offset from the current unix timestamp (Time.now.to_i)
@@ -54,13 +63,6 @@ class Craft
     s = BILLION if score > BILLION
     rank = Time.now.to_i - BILLION + s
     update_attribute(ranking_score: rank)
-  end
-
-  def self.where_twitter_exists # move these to scope
-    # crafts = Craft.all.reject{|c| c.twitter_craft.nil?} # find all crafts with a twitter webcraft
-  end
-  def self.without_twitter
-    # crafts = Craft.all.reject{|c| c.twitter_craft.present?} # find all crafts with missing twitter webcrafts
   end
 
   def tweet_stream_id
@@ -130,21 +132,20 @@ class Craft
       self.address = wc.address if (:yelp==wc.provider || ( wc.address.present? and not self.address.present?) )
       self.coordinates = wc.coordinates if (:yelp==wc.provider || ( wc.coordinates.present? and not self.coordinates.present?) )
     end
-    save
   end
 
   def build_web_craft(web_craft)
     case web_craft.provider
-    when :twitter
-      build_twitter_craft(wc.attributes)
-    when :yelp
-      build_yelp_craft(wc.attributes)
-    when :facebook
-      build_facebook_craft(wc.attributes)
-    when :website
-      build_website_craft(wc.attributes)
-    else
-      raise "Unknown WebCraft provider: #{web_craft.provider}"
+      when :twitter
+        self.twitter_craft = web_craft
+      when :yelp
+        self.yelp_craft = web_craft
+      when :facebook
+        self.facebook_craft = web_craft
+      when :website
+        self.website_craft = web_craft
+      else
+        raise "Unknown WebCraft provider: #{web_craft.provider}"
     end
   end
 
@@ -163,7 +164,6 @@ class Craft
     x
   end
 
-
   def website
     # first see if there is a website specified
     x = yelp_craft.website if yelp_craft.present?
@@ -176,12 +176,10 @@ class Craft
     x
   end
 
-  def location 
-    x = address
-  end
-
   def profile_image_url
     x = twitter_craft.profile_image_url if twitter_craft.present?
+    #+++ TODO ||= facebook profile image
+    x
   end
   def profile_background_color
     x = twitter_craft.profile_background_color if twitter_craft.present?
@@ -195,7 +193,7 @@ class Craft
   end
   def profile_background_tile
     if twitter_craft.present?
-      x = twitter_craft.profile_background_tile 
+      x = twitter_craft.profile_background_tile
     else
       x = false 
     end
@@ -238,14 +236,8 @@ class Craft
     @last_tweeted_at
   end
 
-  def geo_enabled
-    craft.twitter_craft.geo_enabled if twitter_craft.present?
-  end
-
-  def web_craft_for_provider(provider) web_crafts.where(provider: provider).first end
-
 private
-  def geocode_this_location!
+  def geocode_this_location! # +++ TODO move this into mixin (and the method in WebCraft too)
     if address.present? and (new? or changes[:address].present?)
       geocode # update lat, lng
     elsif self.lat.present? and (new? or changes[:coordinates].present?)

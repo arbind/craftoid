@@ -1,3 +1,7 @@
+# load class extentions
+require 'extentions/urlify'
+require 'extentions/symbolize'
+
 # load utils
 require 'uri'
 require 'utils/redis_auto_expire'
