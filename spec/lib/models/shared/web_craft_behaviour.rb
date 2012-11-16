@@ -1,17 +1,29 @@
+##
+#   Shared Spec for subclasses of WebCraft
+#     eg: TwitterCraft, FacebookCraft, YelpCraft, WebsiteCraft (all of which inherit behaviour from WebCraft)
+##
+
 shared_examples :WebCraft do
 
-  let (:subject_accessor)  { subjectClass.name.underscore } # eg: 'twitter_craft' - used for craft.twitter_craft with craft.send(subject_accessor)
+
+  # eg: subject_accessor = 'twitter_craft' =  use craft.send(subject_accessor) to access craft.twitter_craft
+  let (:subject_accessor)  { subjectClass.name.underscore } 
 
   # id specifications
   specify { subject.web_craft_id.should be_an_instance_of String }
   specify { subject.web_craft_id.should eq subject_id.to_s }
   specify { subject.id_for_fetching.should eq subject_handle }
 
-  # test a subject (instance)
-  it :@provider do
+  ##
+  #   Test the subjectClass and a subject (instance) 
+  #     eg: subjectClass = TwitterCraft 
+  #     eg: subject      = TwitterCraft.new (atts)
+  ##
+
+  it :@provider do # @instance_method
     subject.provider.should equal provider_symbol
   end
-  it :@@provider do
+  it :@@provider do # @@class_method
     subjectClass.provider.should equal provider_symbol
   end
 
@@ -81,7 +93,7 @@ shared_examples :WebCraft do
 
   end
 
-  it :@geocodes
+  it :@geocode_location
 
   # def geocode_this_location!
 end
