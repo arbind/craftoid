@@ -53,9 +53,11 @@ class WebCraft
   end
 
   def self.materialize_for_web_craft_id(wc_id)
-    craft = Craft.where('#{web_craft_type}.web_craft_id' => wc_id).first
-    return craft[web_craft_type] if craft
-    return new({web_craft_id: wc_id})
+    # see if a web_craft already exists by this wc_id
+    craft = Craft.where("#{web_craft_type}.web_craft_id" => wc_id).first
+    web_craft   = craft.send(web_craft_type) if craft
+    web_craft ||= new( {web_craft_id: wc_id} ) # create a new web_craft by wc_id if one wasnt found
+    web_craft
   end
 
   def provider
