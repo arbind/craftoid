@@ -1,6 +1,6 @@
 # Craftoid
 
-Domain model of a person's (or organization's) craft and their webcrafts.
+Domain model objects and search service for an organization's craft and their (embedded) webcrafts.
 
     requires MongoDB server for saving models
     requires redis server for geo caching
@@ -27,10 +27,9 @@ The default rake task will run rspec and coverage test:
     rake spec
     open coverage/index.html
 
-## Usage
+## Capabilities
 
-Your app can:
-1. create new Crafts, and bind corresponding WebCrafts (website, twitter, yelp, facebook, etc).
+1. Create new Crafts, bind their corresponding WebCrafts (website, twitter, yelp, facebook, etc.)
 2. Search for Crafts
 
 ## Contributing
