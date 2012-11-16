@@ -19,6 +19,14 @@ Or install it yourself as:
 
     $ gem install craftoid (once it is published)
 
+
+## Testing
+
+The default rake task will run rspec and coverage test:
+
+    rake spec
+    open coverage/index.html
+
 ## Usage
 
 Your app can:
