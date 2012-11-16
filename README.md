@@ -1,12 +1,15 @@
 # Craftoid
 
-TODO: Write a gem description
+Domain model of a person's (or organization's) craft and their webcrafts.
+
+    requires MongoDB server for saving models
+    requires redis server for geo caching
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
-    gem 'craftoid'
+    gem 'craftoid', :git => 'git@github.com:arbind/craftoid.git'
 
 And then execute:
 
@@ -14,11 +17,13 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install craftoid
+    $ gem install craftoid (once it is published)
 
 ## Usage
 
-TODO: Write usage instructions here
+Your app can:
+1. create new Crafts, and bind corresponding WebCrafts (website, twitter, yelp, facebook, etc).
+2. Search for Crafts
 
 ## Contributing
 
@@ -31,5 +36,8 @@ TODO: Write usage instructions here
 ## To Build this gem locally:
     $ gem uninstall craftoid
     $ rake install
-ref: [http://rakeroutes.com/blog/lets-write-a-gem-part-two/](http://rakeroutes.com/blog/lets-write-a-gem-part-two/)
-ref: [http://railscasts.com/episodes/245-new-gem-with-bundler](http://railscasts.com/episodes/245-new-gem-with-bundler)
+
+## References
+
+1. ref: [http://rakeroutes.com/blog/lets-write-a-gem-part-two/](http://rakeroutes.com/blog/lets-write-a-gem-part-two/)
+2. ref: [http://railscasts.com/episodes/245-new-gem-with-bundler](http://railscasts.com/episodes/245-new-gem-with-bundler)
