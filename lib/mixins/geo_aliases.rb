@@ -1,9 +1,24 @@
 module GeoAliases
-  # Be sure to have these geo fields available in classes that including the GeoAliases module:
-  # field :location_hash
-  # field :address, default: nil
-  # field :coordinates, type: Array, default: []
-
+###
+#   To geo-enable your geo class:
+#   class YourGeoClass
+#     include Geocoder::Model::Mongoid
+#     include GeoAliases
+#     field :location_hash
+#     field :address, default: nil
+#     field :coordinates, type: Array, default: []
+#     before_save :geocode_this_location!  # optionally auto-fetch coordinates on save
+#     # your other class stuff
+#   end
+#
+#   Usage:
+#   subject = YourGeoclass.new
+#   subject.address = '301 Lavaca St., Austin, TX'
+#   subject.geocode  # Will populate lat lng
+#   or
+#   subject.geo_point = { lat:34.0169509, lng:-118.4977229 }
+#   subject.reverse_geocode  # Will populate address
+###
   def Geocoder.clear_cache() Geocoder.cache.expire(:all) if Geocoder.cache.present? end
 
   # geocoding  aliases

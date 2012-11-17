@@ -17,11 +17,9 @@ class Craft
 
   field :is_mobile, type: Boolean, default: false
 
-  field :search_tags, type: Array, default: []
+  field :search_tags,  type: Array, default: []
   field :essence_tags, type: Array, default: []     # e.g. food, fit, fun, travel, home
-  field :theme_tags, type: Array, default: []       # e.g. truck, taco, sushi: weight-loss, yoga, etc
-  # field :id_tags, type: Array, default: []        # e.g. fb:facebook_id, yelp:yelp_id, @twitter_id etc.
-  # field :username_tags, type: Array, default: []  # e.g. fb:username, @twitter_handle
+  field :theme_tags,   type: Array, default: []     # e.g. truck, taco, sushi: weight-loss, yoga, etc
 
   # statuses
   field :rejected, type: Boolean, default: false
