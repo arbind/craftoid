@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe :symbolize do
+describe :@symbolize do
   it :@symbolize_a_string do
     "My Symbol".symbolize.should eq :my_symbol
     "MySymbol".symbolize.should eq :my_symbol
