@@ -1,5 +1,5 @@
 class WebsiteCraft < WebCraft
-  field :provider, type: Symbol, default: :webpage
+  field :provider, type: Symbol, default: :website
 
   field :host
   field :keywords

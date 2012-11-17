@@ -3,70 +3,119 @@
 #     eg: TwitterCraft, FacebookCraft, YelpCraft, WebsiteCraft (all of which inherit behaviour from WebCraft)
 ##
 
-shared_examples :WebCraft do
+shared_examples :WebCraft do |subclass_info|
 
+  ##
+  #   Define indicators for this provider
+  ##
+  let (:provider_key)       { subclass_info[:provider][:key] }      # eg: '@' or 'fb' or 'yelp'
+  let (:provider_symbol)    { subclass_info[:provider][:symbol] }   # eg: :twitter or :facebook or :yelp
 
-  # eg: subject_accessor = 'twitter_craft' =  use craft.send(subject_accessor) to access craft.twitter_craft
-  let (:subject_accessor)  { subjectClass.name.underscore } 
+  ##
+  #   Define class and corresponding accessor
+  ##
+  let (:clazz)              { subclass_info[:clazz] }   # eg: TwitterCraft
+  let (:craft_accessor)     { clazz.name.underscore }   # eg: twitter_craft - craft.send(craft_accessor) calls craft.twitter_craft
 
-  # id specifications
+  ##
+  #   Define a test subject as an instance of the subclass
+  ##
+  let (:subject_id)         { subclass_info[:subject][:id] }   
+  let (:subject_handle)     { subclass_info[:subject][:handle] }  # eg: username or handle
+  let (:subject_attributes) { subclass_info[:subject][:attributes].merge({'web_craft_id'=>subject_id, 'username'=>subject_handle}) }
+  subject                   { clazz.new subject_attributes }
+
+  ##
+  #   Check existence of the subclass
+  #   eg: clazz = TwitterCraft 
+  ##
+  specify { clazz.should_not be_nil }
+  specify { clazz.should equal subject.class }
+
+  ##
+  #   Check the id of an instance (subject)
+  ##
   specify { subject.web_craft_id.should be_an_instance_of String }
   specify { subject.web_craft_id.should eq subject_id.to_s }
   specify { subject.id_for_fetching.should eq subject_handle }
 
   ##
-  #   Test the subjectClass and a subject (instance) 
-  #     eg: subjectClass = TwitterCraft 
-  #     eg: subject      = TwitterCraft.new (atts)
+  #   Check basic class methods
   ##
+  it :@@provider do # @@class_method
+    clazz.provider.should equal provider_symbol
+  end
+  it :@@provider_key do
+    clazz.provider_key.should eq provider_key
+  end
 
+  ##
+  #   Check basic instance methods 
+  #   eg: subject = TwitterCraft.new (atts)
+  ##
   it :@provider do # @instance_method
     subject.provider.should equal provider_symbol
   end
-  it :@@provider do # @@class_method
-    subjectClass.provider.should equal provider_symbol
-  end
-
   it :@provider_key do
     subject.provider_key.should eq provider_key
   end
-  it :@@provider_key do
-    subjectClass.provider_key.should eq provider_key
-  end
 
-  context :invalid_id do
-    it :@@materialize do
-      wc = subjectClass.materialize( {has_no_web_craft_id:true} )
-      wc.should be_nil
+  ##
+  #   Check geo-coding address <-> lat-lng
+  ##
+  it :@geocode_location
+  context :when_subject_already_exists do
+    before(:each) do
+      atts = subject_attributes.deep_dup
+      atts.delete(:address)
+      atts.delete(:coordinates)
+      @webcraft = clazz.materialize(atts)
+      @craft = Craft.new
+      @craft.bind(@webcraft)
+    end
+    after(:each) do
+      @craft.delete # deleting the parent craft also deletes the embedded webcraft
+    end
+
+    it :@geocodes_before_save do
+      @webcraft.address.should be_blank
+      @webcraft.coordinates.should be_blank
+
+      @webcraft.update_attribute(:address,'3rd Street Promenade, Santa Monica CA')
+      @webcraft.coordinates.should be_blank      
+    end
+    it :@reverse_geocodes_before_save do
+      @webcraft.address.should be_blank
+      @webcraft.coordinates.should be_blank
     end
   end
 
+  ##
+  #   Check materializing a new instance
+  ##
   context :when_subject_doesnt_exist do
     it :@@materialize do
-      wc = subjectClass.materialize(subject_attributes)
-      wc.should_not be_nil
-      wc.web_craft_id.should eq subject_id.to_s
-    end
-
-    it :@@materialize_works_with_integer_id do
-      wc = subjectClass.materialize({web_craft_id: subject_id.to_i})
+      wc = clazz.materialize(subject_attributes)
       wc.should_not be_nil
       wc.web_craft_id.should eq subject_id.to_s
     end
 
     it :@@materialize_works_with_string_id do
-      wc = subjectClass.materialize({web_craft_id: subject_id.to_s})
+      wc = clazz.materialize({web_craft_id: subject_id.to_s})
       wc.should_not be_nil
       wc.web_craft_id.should eq subject_id.to_s
     end
 
     it :@@materialize_craft_is_nil do
-      wc = subjectClass.materialize(subject_attributes)
+      wc = clazz.materialize(subject_attributes)
       wc.should_not be_nil
       wc.craft.should be_nil
     end
   end
 
+  ##
+  #   Check materializing an existing instance
+  ##
   context :when_subject_already_exists do
     before(:all) do
       c = Craft.new
@@ -74,26 +123,60 @@ shared_examples :WebCraft do
       c.save
     end
     after(:all) do
-      subject.craft.delete # delete the parent craft
+      subject.craft.delete # deleting the parent craft also deletes the embedded webcraft
     end
 
-    it :@@materialize_works_with_integer_id do
-      wc = subjectClass.materialize({web_craft_id: subject_id})
+    it :@@materialize do
+      wc = clazz.materialize(subject_attributes)
+      wc.should_not be_nil
+      wc.web_craft_id.should eq subject_id.to_s
+      wc.username.should eq subject_handle
+      wc.craft.should_not be_nil
+      wc.craft.send(craft_accessor).should eq wc
+    end
+
+    it :@@materialize_works_with_string_id do
+      wc = clazz.materialize({web_craft_id: subject_id.to_s})
       wc.should_not be_nil
       wc.web_craft_id.should eq subject_id.to_s
       wc.username.should eq subject_handle
     end
 
     it :@@materialize_craft_exists do
-      wc = subjectClass.materialize({ web_craft_id: subject_id })
+      wc = clazz.materialize({ web_craft_id: subject_id })
       wc.should_not be_nil
       wc.craft.should_not be_nil
-      wc.craft.send(subject_accessor).should eq wc
+      wc.craft.send(craft_accessor).should eq wc
+    end
+
+    it :@@materialize_will_assign_new_attributes do
+      old_name = subject_attributes[:name]
+      old_desc = subject_attributes[:description]
+
+      new_postfix = Time.now.to_i.to_s
+      new_name = "A New Name " << new_postfix
+      new_desc = "A New Description " << new_postfix
+      new_atts = subject_attributes.merge({name: new_name, description:new_desc})
+
+      wc = clazz.materialize(new_atts)
+
+      wc.name.should_not eq old_name
+      wc.description.should_not eq old_desc
+
+      wc.name.should eq new_name
+      wc.description.should eq new_desc
     end
 
   end
 
-  it :@geocode_location
+  ##
+  #   Check materializing from invalid attributes
+  ##
+  context :invalid_id do
+    it :@@materialize do
+      wc = clazz.materialize( {has_no_web_craft_id:true} )
+      wc.should be_nil
+    end
+  end
 
-  # def geocode_this_location!
 end

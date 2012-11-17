@@ -30,7 +30,7 @@ class Craft
   embeds_one :twitter_craft
   embeds_one :yelp_craft
   embeds_one :facebook_craft
-  embeds_one :webpage_craft
+  embeds_one :website_craft
 
   index :search_tags
   index :essence_tags

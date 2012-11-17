@@ -1,19 +1,19 @@
 require 'spec_helper'
 require 'lib/models/shared/web_craft_behaviour'
 
-describe :YelpCraft do
+describe :FacebookCraft do
   subclass_info = {
-    clazz: YelpCraft,
+    clazz: FacebookCraft,
     provider: {
-      symbol: :yelp,
-      key:    'yelp'
+      symbol: :facebook,
+      key:    'fb'
     },
     subject: {
-      id:     'a-yelp-id',
-      handle: 'a-yelp-id',
+      id:     123,
+      handle: '123',
       attributes: {
         name: 'Myfirst Andlast',
-        description: 'A great service that is just around the corner from you!'
+        description: 'A great service you can try!'
       }
     }
   }
