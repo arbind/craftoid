@@ -4,7 +4,7 @@ ENV['RACK_ENV'] = 'test'
 # set up test coverage
 require 'simplecov'
 SimpleCov.start do
-  minimum_coverage 98
+  minimum_coverage 100
 end
 
 require 'Craftoid'
@@ -13,4 +13,7 @@ require 'Craftoid'
 abort('Redis not configured for test environment !!!')    unless REDIS_DB.eql? REDIS_DB_ENVIRONMENTS[:test]
 abort('Mongoid not configured for test environment !!!')  unless Mongoid.database.name.match /_test$/
 
-Mongoid.purge! # start fresh before each test
+# start fresh before each test
+Mongoid.purge!
+Geocoder.clear_cache
+

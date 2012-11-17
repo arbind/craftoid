@@ -22,5 +22,6 @@ require "models/web_craft/website_craft"
 
 # Load gem
 require "craftoid/version"
+
 module Craftoid
 end
