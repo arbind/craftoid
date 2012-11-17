@@ -9,3 +9,9 @@ class Symbol
     self.to_s.symbolize
   end
 end
+
+class NilClass
+  def symbolize
+    :nil
+  end
+end

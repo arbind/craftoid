@@ -1,6 +1,4 @@
 class FacebookCraft < WebCraft
-  field :provider, type: Symbol, default: :facebook
-
   field :likes
   field :talking_about_count
 

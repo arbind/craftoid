@@ -19,6 +19,7 @@ Geocoder.configure do |config|
 
   # caching (see below for details):
   # config.cache = REDIS
-  config.cache = RedisAutoExpire.new(REDIS, 86400) # +++ TODO move TTL for geo cache into configs
+  # config.cache = RedisAutoExpire.new(REDIS, 86400) # +++ TODO move TTL for geo cache into configs
+  config.cache = REDIS
   config.cache_prefix = "gO:" # gee-oooh :)
 end

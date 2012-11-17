@@ -13,7 +13,7 @@ class WebCraft
   field :name
   field :description
   field :website # craft's actual website
-  field :location_hash, type: Hash
+  field :location_hash, type: Hash, default: {}
   field :address, default: nil
   field :coordinates, type: Array, default: []
 

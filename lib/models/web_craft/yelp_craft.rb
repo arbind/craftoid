@@ -1,6 +1,4 @@
 class YelpCraft < WebCraft
-  field :provider, type: Symbol, default: :yelp
-
   field :phone
   field :image_url
 

@@ -76,7 +76,7 @@ shared_examples :WebCraft do |subclass_info|
       @craft.delete # deleting the parent craft also deletes the embedded webcraft
     end
 
-    it :@geocode_before_save do
+    it :@geocode_address_before_save do
       # '3rd Street Promenade, Santa Monica CA' -> [lat:34.0169509, lng:-118.4977229]
       @webcraft.address.should be_blank
       @webcraft.coordinates.should be_blank
@@ -85,8 +85,33 @@ shared_examples :WebCraft do |subclass_info|
 
       @webcraft.update_attribute(:address,'3rd Street Promenade, Santa Monica CA')
       @webcraft.coordinates.should be_present
-      @webcraft.lat.should be_between(33, 35)     # lat is about 34.0169509
-      @webcraft.lng.should be_between(-120, -117) # lng is about -118.4977229
+      @webcraft.lat.should be_between(33, 35)     # Santa Monica lat is about 34.0169509
+      @webcraft.lng.should be_between(-120, -117) # Santa Monica lng is about -118.4977229
+      geo_point = @webcraft.geo_point
+      @webcraft.lat.should eq geo_point[:lat]     # +++ TODO break out geo point testing into separate spec
+      @webcraft.lng.should eq geo_point[:lng]     # +++ TODO break out geo point testing into separate spec
+    end
+
+    it :@geocode_location_hash_before_save do
+      # '100 North Lake Blvd, Tahoe City CA 96145' -> [lat: 39.1844571, lng:-120.1227438]
+      @webcraft.address.should be_blank
+      @webcraft.location_hash.should be_blank
+      @webcraft.coordinates.should be_blank
+      @webcraft.lat.should be_blank
+      @webcraft.lng.should be_blank
+
+      @webcraft.location_hash[:address] = '100 North Lake Blvd'
+      @webcraft.location_hash[:city] = 'Tahoe City'
+      @webcraft.location_hash[:state] = 'CA'
+      @webcraft.location_hash[:zip] = '96145'
+      @webcraft.location_hash[:country] = 'USA'
+
+      @webcraft.save!
+      @webcraft.address.should_not be_blank
+      @webcraft.address.should include 'Tahoe'
+      @webcraft.coordinates.should be_present
+      @webcraft.lat.should be_between(38, 41)     # Lake Tahoe lat is about 39.1844571
+      @webcraft.lng.should be_between(-121, -118) # Lake Tahoe lng is about -120.1227438
     end
 
     it :@reverse_geocode_before_save do
@@ -97,8 +122,8 @@ shared_examples :WebCraft do |subclass_info|
       @webcraft.coordinates.should be_blank
       @webcraft.lat.should be_blank
       @webcraft.lng.should be_blank
-      @webcraft.lat = 39.1844571
-      @webcraft.lng = -120.1227438
+      geo_point = {lat:39.1844571 , lng:-120.1227438 }
+      @webcraft.geo_point = geo_point
       @webcraft.save!
       @webcraft.coordinates.should be_present
       @webcraft.address.should match /Tahoe/

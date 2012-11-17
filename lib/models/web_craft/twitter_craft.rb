@@ -1,6 +1,4 @@
 class TwitterCraft < WebCraft
-  field :provider, type: Symbol, default: :twitter
-
   field :tweet_stream_id
 
   field :is_protected

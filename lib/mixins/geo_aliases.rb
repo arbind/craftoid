@@ -11,12 +11,8 @@ module GeoAliases
   end
 
   # geocoding  aliases
-  def ip_address
-   address
-  end
-  def ip_address=(val)
-    self.address=ip_address
-  end
+  def ip_address() address end
+  def ip_address=(val) self.address=ip_address end
 
   def latitude
     coordinates.last
@@ -70,11 +66,11 @@ module GeoAliases
       geocode # update lat, lng
     elsif self.location_hash.present? and not self.lat.present? and (new? or changes[:location_hash].present?)
       l = []
-      (l << location_hash[:address]) if location_hash[:address].present?
-      (l << location_hash[:city]) if location_hash[:city].present?
-      (l << location_hash[:state]) if location_hash[:state].present?
-      (l << location_hash[:zip]) if location_hash[:zip].present?
-      (l << location_hash[:country]) if location_hash[:country].present?
+      (l << location_hash[:address].to_s) if location_hash[:address].present?
+      (l << location_hash[:city].to_s) if location_hash[:city].present?
+      (l << location_hash[:state].to_s) if location_hash[:state].present?
+      (l << location_hash[:zip].to_s) if location_hash[:zip].present?
+      (l << location_hash[:country].to_s) if location_hash[:country].present?
       self.address = l.join(', ') if l.present?
       geocode # update lat, lng
     end

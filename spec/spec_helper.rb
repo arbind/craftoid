@@ -4,7 +4,7 @@ ENV['RACK_ENV'] = 'test'
 # set up test coverage
 require 'simplecov'
 SimpleCov.start do
-  minimum_coverage 100
+  minimum_coverage 98
 end
 
 require 'Craftoid'

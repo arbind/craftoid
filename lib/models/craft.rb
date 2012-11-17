@@ -202,7 +202,7 @@ class Craft
   end
   # Craft Branding
 
-    def last_tweet_html
+  def last_tweet_html
     if twitter_craft.present? and twitter_craft.oembed.present?
       x = twitter_craft.oembed['html'].html_safe
     else
