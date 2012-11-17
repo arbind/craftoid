@@ -18,7 +18,7 @@ describe RedisAutoExpire do
     @timedREDIS.del(@key) 
   end
 
-  it :@set do
+  it :"[]" do
     @timedREDIS[@key].should be_blank
     @timedREDIS[@key] = @value
     @timedREDIS[@key].should eq @value

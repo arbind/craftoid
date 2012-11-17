@@ -17,12 +17,8 @@ REDIS_DB = REDIS_DB_ENVIRONMENTS[ ENV["RACK_ENV"] ]
 
 uri = URI.parse( REDIS_URI )
 
-begin
-  REDIS = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
-  REDIS.select REDIS_DB
-rescue
-  REDIS = nil
-  puts "!!!"
-  puts "!!! redis server is not running on #{uri}"
-  puts "!!!"
-end
+
+REDIS = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password) rescue nil
+REDIS.select REDIS_DB unless REDIS.nil?
+
+puts "!!!\n!!! redis server is not running on #{uri}\n!!!" if REDIS.nil?

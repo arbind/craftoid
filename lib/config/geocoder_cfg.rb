@@ -1,9 +1,6 @@
 require 'geocoder' # configure geocoder to use redis:
-# This class implements a cache with simple delegation to the Redis store, but
-# when it creates a key/value pair, it also sends an EXPIRE command with a TTL.
-# It should be fairly simple to do the same thing with Memcached.
 
-GEOCODER_CACHE_TTL = 86400 # +++ TODO move TTL for geo cache into configs
+GEOCODER_CACHE_TTL = 86400 # (60s * 60m * 24h)  # +++ TODO move TTL for geo cache into configs
 
 Geocoder.configure do |config|
   config.lookup = :google # geocoding service (see below for supported options):
