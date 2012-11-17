@@ -12,7 +12,7 @@ shared_examples :WebCraft do |subclass_info|
   let (:provider_symbol)    { subclass_info[:provider][:symbol] }   # eg: :twitter or :facebook or :yelp
 
   ##
-  #   Define class and corresponding accessor
+  #   Define clazz (subclass of WebCraft) and corresponding accessor
   ##
   let (:clazz)              { subclass_info[:clazz] }   # eg: TwitterCraft
   let (:craft_accessor)     { clazz.name.underscore }   # eg: twitter_craft - craft.send(craft_accessor) calls craft.twitter_craft
@@ -20,17 +20,17 @@ shared_examples :WebCraft do |subclass_info|
   ##
   #   Define a test subject as an instance of the subclass
   ##
-  let (:subject_id)         { subclass_info[:subject][:id] }   
+  let (:subject_id)         { subclass_info[:subject][:id] }      # eg: 45345, or '45677', or yelp-biz-name', or 'http://mysite.com'. etc.
   let (:subject_handle)     { subclass_info[:subject][:handle] }  # eg: username or handle
   let (:subject_attributes) { subclass_info[:subject][:attributes].merge({'web_craft_id'=>subject_id, 'username'=>subject_handle}) }
   subject                   { clazz.new subject_attributes }
 
   ##
-  #   Check existence of the subclass
+  #   Check that the subclass exists
   #   eg: clazz = TwitterCraft 
   ##
   specify { clazz.should_not be_nil }
-  specify { clazz.should equal subject.class }
+  specify { subject.should be_an_instance_of clazz }
 
   ##
   #   Check the id of an instance (subject)
@@ -61,10 +61,9 @@ shared_examples :WebCraft do |subclass_info|
   end
 
   ##
-  #   Check geo-coding address <-> lat-lng
+  #   Check geocoding and reverse geocoding of address <-> lat-lng
   ##
-  it :@geocode_location
-  context :when_subject_already_exists do
+  context :GeoCoder do
     before(:each) do
       atts = subject_attributes.deep_dup
       atts.delete(:address)
@@ -77,16 +76,32 @@ shared_examples :WebCraft do |subclass_info|
       @craft.delete # deleting the parent craft also deletes the embedded webcraft
     end
 
-    it :@geocodes_before_save do
+    it :@geocode_before_save do
+      # '3rd Street Promenade, Santa Monica CA' -> [lat:34.0169509, lng:-118.4977229]
       @webcraft.address.should be_blank
       @webcraft.coordinates.should be_blank
+      @webcraft.lat.should be_blank
+      @webcraft.lng.should be_blank
 
       @webcraft.update_attribute(:address,'3rd Street Promenade, Santa Monica CA')
-      @webcraft.coordinates.should be_blank      
+      @webcraft.coordinates.should be_present
+      @webcraft.lat.should be_between(33, 35)     # lat is about 34.0169509
+      @webcraft.lng.should be_between(-120, -117) # lng is about -118.4977229
     end
-    it :@reverse_geocodes_before_save do
+
+    it :@reverse_geocode_before_save do
+      # [lat: 39.1844571, lng:-120.1227438] -> 
+      #   '100 North Lake Blvd, Tahoe City CA 96145'  or  
+      #   'Tamarack Lodge, Tahoe National Forest, Dollar Point, CA 96145, USA'
       @webcraft.address.should be_blank
       @webcraft.coordinates.should be_blank
+      @webcraft.lat.should be_blank
+      @webcraft.lng.should be_blank
+      @webcraft.lat = 39.1844571
+      @webcraft.lng = -120.1227438
+      @webcraft.save!
+      @webcraft.coordinates.should be_present
+      @webcraft.address.should match /Tahoe/
     end
   end
 

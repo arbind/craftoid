@@ -13,7 +13,7 @@ class WebCraft
   field :name
   field :description
   field :website # craft's actual website
-  field :location_hash
+  field :location_hash, type: Hash
   field :address, default: nil
   field :coordinates, type: Array, default: []
 
@@ -76,22 +76,6 @@ class WebCraft
     # urlify
     self.website = website.downcase.urlify! if website.looks_like_url?
     self.href = href.downcase.urlify! if href.looks_like_url?
-  end
-
-  def geocode_this_location!
-    if self.lat.present? and (new? or changes[:coordinates].present?)
-      reverse_geocode # udate the address
-    elsif location_hash.present? and not self.lat.present? and (new? or changes[:location_hash].present?)
-      l = []
-      (l << location_hash[:address]) if location_hash[:address].present?
-      (l << location_hash[:city]) if location_hash[:city].present?
-      (l << location_hash[:state]) if location_hash[:state].present?
-      (l << location_hash[:zip]) if location_hash[:zip].present?
-      (l << location_hash[:country]) if location_hash[:country].present?
-      self.address = l.join(', ') if l.present?
-      geocode # update lat, lng
-    end
-    return true
   end
 
 end

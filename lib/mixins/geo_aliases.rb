@@ -1,4 +1,8 @@
 module GeoAliases
+  # Be sure to have these geo fields available in classes that including the GeoAliases module:
+  # field :location_hash
+  # field :address, default: nil
+  # field :coordinates, type: Array, default: []
 
   class << self
     def clear_geocoder_cache
@@ -20,7 +24,8 @@ module GeoAliases
   alias_method :lat, :latitude
 
   def latitude=(lat)
-    coordinates ||= [0,0]; coordinates[1] = lat
+    self.coordinates ||= [0,0]
+    self.coordinates[1] = lat
   end
   alias_method :lat=, :latitude=
 
@@ -31,7 +36,8 @@ module GeoAliases
   alias_method :long, :longitude
 
   def longitude=(lng)
-    coordinates[0] = lng
+    self.coordinates ||= [0,0]
+    self.coordinates[0] = lng
   end
   alias_method :lng=, :longitude=
   alias_method :long=, :longitude=
@@ -56,4 +62,23 @@ module GeoAliases
   alias_method :geo_coordinate, :geo_point
   alias_method :geo_coordinate=, :geo_point=
   # /geo point hash representation
+
+  def geocode_this_location!
+    if self.lat.present? and (new? or changes[:coordinates].present?)
+      reverse_geocode # update the address
+    elsif address.present? and (new? or changes[:address].present?)
+      geocode # update lat, lng
+    elsif self.location_hash.present? and not self.lat.present? and (new? or changes[:location_hash].present?)
+      l = []
+      (l << location_hash[:address]) if location_hash[:address].present?
+      (l << location_hash[:city]) if location_hash[:city].present?
+      (l << location_hash[:state]) if location_hash[:state].present?
+      (l << location_hash[:zip]) if location_hash[:zip].present?
+      (l << location_hash[:country]) if location_hash[:country].present?
+      self.address = l.join(', ') if l.present?
+      geocode # update lat, lng
+    end
+    return true
+  end
+
 end

@@ -11,6 +11,7 @@ class Craft
   # geocoder fields
   # mongoid stores [long, lat] - which is backwards from normal convention
   # geocoder knows this, but expects [lat, lng]
+  field :location_hash, type: Hash
   field :address, default: nil
   field :coordinates, type: Array, default: []
 
@@ -237,14 +238,6 @@ class Craft
   end
 
 private
-  def geocode_this_location! # +++ TODO move this into mixin (and the method in WebCraft too)
-    if address.present? and (new? or changes[:address].present?)
-      geocode # update lat, lng
-    elsif self.lat.present? and (new? or changes[:coordinates].present?)
-      reverse_geocode # udate the address # +++ add {time, coordinates, address} to geo_location_history
-    end
-    return true
-  end
 
   def has_tag(list_name, tag)
     tags = self[list_name]
