@@ -16,5 +16,13 @@ ENV["RACK_ENV"] = (ENV["REDISTOGO_URL"].nil? ? "development" : "production" ) if
 REDIS_DB = REDIS_DB_ENVIRONMENTS[ ENV["RACK_ENV"] ]
 
 uri = URI.parse( REDIS_URI )
-REDIS = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
-REDIS.select REDIS_DB
+
+begin
+  REDIS = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
+  REDIS.select REDIS_DB
+rescue
+  REDIS = nil
+  puts "!!!"
+  puts "!!! redis server is not running on #{uri}"
+  puts "!!!"
+end

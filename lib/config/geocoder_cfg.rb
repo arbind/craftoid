@@ -3,6 +3,8 @@ require 'geocoder' # configure geocoder to use redis:
 # when it creates a key/value pair, it also sends an EXPIRE command with a TTL.
 # It should be fairly simple to do the same thing with Memcached.
 
+GEOCODER_CACHE_TTL = 86400 # +++ TODO move TTL for geo cache into configs
+
 Geocoder.configure do |config|
   config.lookup = :google # geocoding service (see below for supported options):
 
@@ -19,6 +21,6 @@ Geocoder.configure do |config|
 
   # caching (see below for details):
   # config.cache = REDIS
-  config.cache = RedisAutoExpire.new(REDIS, 86400) # +++ TODO move TTL for geo cache into configs
+  config.cache = RedisAutoExpire.new(REDIS, GEOCODER_CACHE_TTL) if REDIS.present?
   config.cache_prefix = "gO:" # gee-oooh :)
 end

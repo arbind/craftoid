@@ -4,7 +4,7 @@ module GeoAliases
   # field :address, default: nil
   # field :coordinates, type: Array, default: []
 
-  def Geocoder.clear_cache() Geocoder.cache.expire(:all) end
+  def Geocoder.clear_cache() Geocoder.cache.expire(:all) if Geocoder.cache.present? end
 
   # geocoding  aliases
   def ip_address() address end
