@@ -14,7 +14,7 @@ require 'config/geocoder_cfg' # depends on redis
 # load models
 require "mixins/geo_aliases"
 require "models/craft"
-require "models/web_craft/web_craft"
+require "models/web_craft"
 require "models/web_craft/yelp_craft"
 require "models/web_craft/twitter_craft"
 require "models/web_craft/facebook_craft"
