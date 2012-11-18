@@ -50,7 +50,6 @@ class Craft
   # scope with_website_craft
   # scope without_website_craft
 
-
   ### 
   # rescore! 
   # saves with a new score (which also triggers a rerank)
@@ -127,19 +126,9 @@ class Craft
   ###
   # util
   ###
+
   def now_active?
-    time = last_tweeted_at
-    return false if time.nil?
-
-    time = time + (-Time.zone_offset(Time.now.zone))
-    2.days.ago < time # consider this craft to be active if there was a tweet in the last 2 days
-  end
-
-  def how_long_ago_was_last_tweet
-    return @how_long_ago_was_last_tweet if @how_long_ago_was_last_tweet.present?
-    x = Util.how_long_ago_was(last_tweeted_at) if last_tweeted_at.present?
-    x ||= nil
-    @how_long_ago_was_last_tweet = x
+    return false # +++ TODO, upcomming schedule? recently tweeted?
   end
 
   def has_essence(essence_tag) has_tag(:essence, essence_tag) end
@@ -150,34 +139,35 @@ class Craft
   def add_theme(theme_tag) add_tag(:theme, theme_tag) end
   def remove_theme(theme_tag) remove_tag(:theme, theme_tag) end
 
-
   ###
   # The Craft's Brand
+  #   name and description:
+  #     Twitter takes precedence, then Facebook, then Yelp
+  #     (Twitter and Facebook are owner created, where as yelp may be crowd sourced)
+  #   website:
+  #     Website url takes precedence, then Twitter, Facebook and Yelp
   ###
-  def name
-    x = twitter_craft.name if twitter_craft.present?
-    x ||= yelp_craft.name if yelp_craft.present?
-    x ||= facebook_craft.name if facebook_craft.present?
+  def name 
+    x = website_craft.name  if website_craft.present?
+    x = yelp_craft.name     if yelp_craft.present?
+    x = facebook_craft.name if facebook_craft.present?
+    x = twitter_craft.name  if twitter_craft.present?
     x
   end
 
   def description
-    x = twitter_craft.description if twitter_craft.present?
-    x ||= yelp_craft.description if yelp_craft.present?
-    x ||= facebook_craft.description if facebook_craft.present?
+    x = website_craft.description  if website_craft.present?
+    x = yelp_craft.description     if yelp_craft.present?
+    x = facebook_craft.description if facebook_craft.present?
+    x = twitter_craft.description  if twitter_craft.present?
     x
   end
 
-  def website
-    # first see if there is a website specified
-    # +++ TODO reject urls of providers
-    x = yelp_craft.website if yelp_craft.present?
-    x ||= twitter_craft.website if twitter_craft.present?
-    x ||= facebook_craft.website if facebook_craft.present?
-    # if not, look for an href to a service
-    x ||= twitter_craft.href if twitter_craft.present?
-    x ||= facebok_craft.href if facebook_craft.present?
-    x ||= yelp_craft.href if yelp_craft.present?
+  def website # Actual web site
+    return website_craft.url if website_craft.present?
+    x = yelp_craft.website     if (yelp_craft.present?     and :website.eql? yelp_craft.website.provider )
+    x = facebook_craft.website if (facebook_craft.present? and :website.eql? facebook_craft.website.provider )
+    x = twitter_craft.website  if (twitter_craft.present?  and :website.eql? twitter_craft.website.provider )
     x
   end
 
@@ -216,28 +206,27 @@ class Craft
   def set_as_home!()  add_essence(:home)    end
 
 
-  def serves_taco?()    has_theme(:taco)    end
-  def serves_sushi?()   has_theme(:taco)    end
-  def serves_bbq?()     has_theme(:taco)    end
-  def serves_yoga?()    has_theme(:taco)    end
+  def serves_taco?()  has_theme(:taco)      end
+  def serves_sushi?() has_theme(:taco)      end
+  def serves_bbq?()   has_theme(:taco)      end
+  def serves_yoga?()  has_theme(:taco)      end
 
-  def does_taco()    add_theme(:taco)       end
-  def does_sushi()   add_theme(:sushi)      end
-  def does_bbq()     add_theme(:bbq)        end
-  def does_yoga()    add_theme(:yoga)       end
+  def does_taco()     add_theme(:taco)      end
+  def does_sushi()    add_theme(:sushi)     end
+  def does_bbq()      add_theme(:bbq)       end
+  def does_yoga()     add_theme(:yoga)      end
 
   ###
   # formaters
   ###
-  def map_pins # can be dropped onto google maps
+  def map_pin # can be dropped onto google maps
     {
-      "#{_id}" => {
-        name: name,
-        lat: lat,
-        lng: lng,
-        website: website,
-        now_active: now_active?
-      }
+      id: _id,
+      lat: lat,
+      lng: lng,
+      name: name,
+      website: website,
+      now_active: now_active?
     }
   end
 
@@ -282,7 +271,6 @@ private
     tags
   end
 end
-
 
 # see for google maps stuff:
 # http://blog.joshsoftware.com/2011/04/13/geolocation-rails-and-mongodb-a-receipe-for-success/
