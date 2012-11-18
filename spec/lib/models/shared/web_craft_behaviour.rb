@@ -61,7 +61,7 @@ shared_examples :WebCraft do |subclass_info|
   end
 
   ##
-  #   Check geocoding and reverse geocoding of address <-> lat-lng
+  #   Sanity Check geocoding (full geocoding spec handled by GeoAliases mixin spec)
   ##
   context :GeoCoder do
     before(:each) do
@@ -92,42 +92,6 @@ shared_examples :WebCraft do |subclass_info|
       @webcraft.lng.should eq geo_point[:lng]     # +++ TODO break out geo point testing into separate spec
     end
 
-    it :@geocode_location_hash_before_save do
-      # '100 North Lake Blvd, Tahoe City CA 96145' -> [lat: 39.1844571, lng:-120.1227438]
-      @webcraft.address.should be_blank
-      @webcraft.location_hash.should be_blank
-      @webcraft.coordinates.should be_blank
-      @webcraft.lat.should be_blank
-      @webcraft.lng.should be_blank
-
-      @webcraft.location_hash[:address] = '100 North Lake Blvd'
-      @webcraft.location_hash[:city] = 'Tahoe City'
-      @webcraft.location_hash[:state] = 'CA'
-      @webcraft.location_hash[:zip] = '96145'
-      @webcraft.location_hash[:country] = 'USA'
-
-      @webcraft.save!
-      @webcraft.address.should_not be_blank
-      @webcraft.address.should include 'Tahoe'
-      @webcraft.coordinates.should be_present
-      @webcraft.lat.should be_between(38, 41)     # Lake Tahoe lat is about 39.1844571
-      @webcraft.lng.should be_between(-121, -118) # Lake Tahoe lng is about -120.1227438
-    end
-
-    it :@reverse_geocode_before_save do
-      # [lat: 39.1844571, lng:-120.1227438] -> 
-      #   '100 North Lake Blvd, Tahoe City CA 96145'  or  
-      #   'Tamarack Lodge, Tahoe National Forest, Dollar Point, CA 96145, USA'
-      @webcraft.address.should be_blank
-      @webcraft.coordinates.should be_blank
-      @webcraft.lat.should be_blank
-      @webcraft.lng.should be_blank
-      geo_point = {lat:39.1844571 , lng:-120.1227438 }
-      @webcraft.geo_point = geo_point
-      @webcraft.save!
-      @webcraft.coordinates.should be_present
-      @webcraft.address.should match /Tahoe/
-    end
   end
 
   ##
