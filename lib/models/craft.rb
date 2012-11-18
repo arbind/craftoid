@@ -4,28 +4,26 @@ class Craft
   include Geocoder::Model::Mongoid
   include GeoAliases
 
-  BILLION = 1000000000
-
-  field :ranking_score, type: Integer, default: 0
+  field :ranking_score,   type: Integer, default: 0
+  field :last_tweeted_at, type: DateTime, default: nil
 
   # geocoder fields
-  # mongoid stores [long, lat] - which is backwards from normal convention
-  # geocoder knows this, but expects [lat, lng]
-  field :location_hash, type: Hash
-  field :address, default: nil
-  field :coordinates, type: Array, default: []
+  field :location_hash,   type: Hash,     default: {}
+  field :address,         type: String,   default: nil
+  field :coordinates,     type: Array,    default: []     # mongoid stores [long, lat] - backwards convention, geocoder knows this, but [lat, lng]
 
-  field :is_mobile, type: Boolean, default: false
+  field :is_mobile,       type: Boolean,  default: false
 
-  field :search_tags,  type: Array, default: []
-  field :essence_tags, type: Array, default: []     # e.g. food, fit, fun, travel, home
-  field :theme_tags,   type: Array, default: []     # e.g. truck, taco, sushi: weight-loss, yoga, etc
+  # indexed tags
+  field :search_tags,     type: Array,    default: []
+  field :essence_tags,    type: Array,    default: []     # e.g. food, fit, fun, travel, home
+  field :theme_tags,      type: Array,    default: []     # e.g. taco, sushi: weight-loss, yoga, etc
 
   # statuses
-  field :rejected, type: Boolean, default: false
-  field :approved, type: Boolean, default: false
+  field :rejected,        type: Boolean,  default: false
+  field :approved,        type: Boolean,  default: false
 
-  # web crafts
+  # embedded web crafts
   embeds_one :twitter_craft
   embeds_one :yelp_craft
   embeds_one :facebook_craft
@@ -37,7 +35,7 @@ class Craft
 
   geocoded_by :address
   reverse_geocoded_by :coordinates
-  before_save :geocode_this_location! # auto-fetch coordinates
+  before_save :geocode_this_location!
 
   # +++ TODO: add scopes
   # scope with_twitter_craft
@@ -49,70 +47,38 @@ class Craft
   # scope with_website_craft
   # scope without_website_craft
 
-  ### SCORE
-  #     The smallest score you can set is 0, the largest is 1 Billion
-  #     ranking_score is represented as a negative offset from the current unix timestamp (Time.now.to_i)
-  #     Setting the score changes with time:
-  #     if today you set craft1.score = 0 and tomorrow you set craft2.score = 0 then craft2 will have a higher ranking_score
-  #     (current unix timestamp are greater than 1Billion)
-  ### 
+### 
+#   SCORE: sets the ranking_score and gives it points for being active
+#     More active crafts will be ranked higher
+#     Whenever score is set, the craft automatically gets points for being active.
+#     So if you set craftA.score=10 today, and craftB.score=10 tomorrow then craftB will rank higher than craftA
+#     If you set craftA.score=10 today, and at the same time tomorrow you again set craftA.score=10,
+#     then ranking_score will go up for for craftA by the number of ms in a day (1000 * 60 * 60 * 24) 86,400,000
+#     
+#     DAY_POINTS
+#     when setting the score, you can think of each point as 1 day
+#     if you set craftA.score = 10 only once
+#     and then you set craftB.score = 1 every day,
+#     then crafB will start to rank higher than craftA after 11 days
+#
+#     calculation:
+#     ranking_score = now + (score * DAY_POINTS)
+#     setting the same score at different times will result in a different ranking_score
+#     The smallest score you can set is 0 (which is still higher than a score of 1 that was set 2 days ago)
+#     ranking_score is represented current unix timestamp (Time.now.to_i) plus score * milliseconds in a day
+### 
+  DAY_POINTS = (1000 * 60 * 60 * 24)  # milliseconds in a day
   def score=(score)
-    s = score
-    s = 0 if score < 0
-    s = BILLION if score > BILLION
-    rank = Time.now.to_i - BILLION + s
+    s = score * DAY_POINTS
+    s = 0 if s < 0
+    rank = Time.now.to_i + s
     update_attribute(ranking_score: rank)
   end
 
-  def tweet_stream_id
-    twitter_craft.present? ? twitter_craft.tweet_stream_id : nil
-  end
-
-  def is_mobile?
-    is_mobile
-  end
-
-  def is_for_mobile_cuisine?
-    has_essence(:mobile_cuisine)
-  end
-
-  def is_for_food?
-    has_essence(:food)
-  end
-  def is_for_fitness?
-    has_essence(:fitness)
-  end
-  def is_for_fun?
-    has_essence(:fun)
-  end
-  def is_for_home?
-    has_essence(:home)
-  end
-
-  alias_method :is_for_food_truck?, :is_for_mobile_cuisine?
-  alias_method :is_for_foodtruck?, :is_for_mobile_cuisine?
-
-  def has_essence(essence)
-    has_tag(:essence, essence_tag)
-  end
-  def add_essence(essence_tag)
-    add_tag(:essence, essence_tag)
-  end
-  def remove_essence(essence_tag)
-    remove_tag(:essence, essence_tag)
-  end
-
-  def has_theme(theme)
-    has_tag(:theme, theme_tag)
-  end
-  def add_theme(theme_tag)
-    add_tag(:theme, theme_tag)
-  end
-  def remove_theme(theme_tag)
-    remove_tag(:theme, theme_tag)
-  end
-
-  def map_pins
+###
+#   formaters
+###
+  def map_pins # can be dropped onto google maps
     {
       "#{_id}" => {
         name: name,
@@ -124,6 +90,9 @@ class Craft
     }
   end
 
+###
+#   WebCraft bindings
+###
   def bind(web_craft)
     web_craft_list = *web_craft 
     web_craft_list.each do |wc|
@@ -133,20 +102,59 @@ class Craft
     end
   end
 
-  def build_web_craft(web_craft)
-    case web_craft.provider
+  def unbind(provider)
+    case provider
       when :twitter
-        self.twitter_craft = web_craft
+        self.twitter_craft = nil
       when :yelp
-        self.yelp_craft = web_craft
+        self.yelp_craft = nil
       when :facebook
-        self.facebook_craft = web_craft
+        self.facebook_craft = nil
       when :website
-        self.website_craft = web_craft
+        self.website_craft = nil
       else
-        raise "Unknown WebCraft provider: #{web_craft.provider}"
+        raise "Unknown WebCraft provider: #{provider}"
     end
   end
+
+###
+#   convenience
+###
+  def is_mobile?( )is_mobile end
+
+  def is_for_food_truck?()
+    is_mobile? and is_for_food?
+  end
+  def set_as_food_truck()
+    self.is_mobile = true
+    set_as_food!()
+  end
+
+  def is_for_food?()  has_essence(:food)    end
+  def is_for_fit?()   has_essence(:fitness) end
+  def is_for_fun?()   has_essence(:fun)     end
+  def is_for_fab?()   has_essence(:fassion) end
+  def is_for_fam?()   has_essence(:family)  end
+  def is_for_home?()  has_essence(:home)    end
+
+  def set_as_food!()  add_essence(:food)    end
+  def set_as_fit!()   add_essence(:fitness) end
+  def set_as_fun!()   add_essence(:fun)     end
+  def set_as_fab!()   add_essence(:fassion) end
+  def set_as_fam!()   add_essence(:family)  end
+  def set_as_home!()  add_essence(:home)    end
+
+
+  def serves_taco?()    has_theme(:taco)    end
+  def serves_sushi?()   has_theme(:taco)    end
+  def serves_bbq?()     has_theme(:taco)    end
+  def serves_yoga?()    has_theme(:taco)    end
+
+  def does_taco()    add_theme(:taco)       end
+  def does_sushi()   add_theme(:sushi)      end
+  def does_bbq()     add_theme(:bbq)        end
+  def does_yoga()    add_theme(:yoga)       end
+
 
   # Derive the Craft's Brand
   def name
@@ -200,13 +208,17 @@ class Craft
   end
   # Craft Branding
 
-  def last_tweet_html
-    if twitter_craft.present? and twitter_craft.oembed.present?
-      x = twitter_craft.oembed['html'].html_safe
-    else
-      x = nil
-    end
-    x
+  # convenient delegations
+  def now_active?
+    time = last_tweeted_at
+    return false if time.nil?
+
+    time = time + (-Time.zone_offset(Time.now.zone))
+    2.days.ago < time # consider this craft to be active if there was a tweet in the last 2 days
+  end
+
+  def tweet_stream_id
+    twitter_craft.present? ? twitter_craft.tweet_stream_id : nil
   end
 
   def how_long_ago_was_last_tweet
@@ -216,26 +228,47 @@ class Craft
     @how_long_ago_was_last_tweet = x
   end
 
-  def now_active?
-    time = last_tweeted_at
-    return false if time.nil?
 
-    time = time + (-Time.zone_offset(Time.now.zone))
-    2.days.ago < time # consider this craft to be active if there was a tweet in the last 2 days
+###
+#   util
+###
+  def has_essence(essence)
+    has_tag(:essence, essence_tag)
+  end
+  def add_essence(essence_tag)
+    add_tag(:essence, essence_tag)
+  end
+  def remove_essence(essence_tag)
+    remove_tag(:essence, essence_tag)
   end
 
-  def last_tweeted_at
-    return @last_tweeted_at if @last_tweeted_at.present?
-    # if twitter.present? and twitter.timeline.present? and twitter.timeline.first.present? and twitter.timeline.first["created_at"].present?      
-    #   @last_tweeted_at = twitter.timeline.first["created_at"]
-    #   @last_tweeted_at = @last_tweeted_at.to_time if @last_tweeted_at.present?
-    # else
-    #   @last_tweeted_at = nil
-    # end
-    @last_tweeted_at
+  def has_theme(theme)
+    has_tag(:theme, theme_tag)
+  end
+  def add_theme(theme_tag)
+    add_tag(:theme, theme_tag)
+  end
+  def remove_theme(theme_tag)
+    remove_tag(:theme, theme_tag)
   end
 
 private
+
+  def build_web_craft(web_craft)
+    case web_craft.provider
+      when :twitter
+        self.twitter_craft = web_craft
+      when :yelp
+        self.yelp_craft = web_craft
+      when :facebook
+        self.facebook_craft = web_craft
+      when :website
+        self.website_craft = web_craft
+      else
+        raise "Unknown WebCraft provider: #{web_craft.provider}"
+    end
+  end
+
 
   def has_tag(list_name, tag)
     tags = self[list_name]
