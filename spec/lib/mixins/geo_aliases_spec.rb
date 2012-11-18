@@ -26,9 +26,7 @@ describe :GeoAliases do
     @host = GeoAliasesHost.new
   end
 
-  it :geo_cache_is_empty do
-    REDIS.keys.should be_empty
-  end
+  specify { REDIS.keys.should be_empty }
 
   it :@geocode_address_before_save do
     # '3rd Street Promenade, Santa Monica CA' -> [lat:34.0169509, lng:-118.4977229]
@@ -46,9 +44,7 @@ describe :GeoAliases do
     @host.lng.should eq geo_point[:lng]     # +++ TODO break out geo point testing into separate spec
   end
 
-  it :geo_cache_has_1 do
-    REDIS.keys.should have(1).things
-  end
+  specify { REDIS.keys.should have(1).things }
 
   it :@geocode_location_hash_before_save do
     # '100 North Lake Blvd, Tahoe City CA 96145' -> [lat: 39.1844571, lng:-120.1227438]
@@ -72,10 +68,7 @@ describe :GeoAliases do
     @host.lng.should be_between(-121, -118) # Lake Tahoe lng is about -120.1227438
   end
 
-  it :geo_cache_has_2 do
-    REDIS.keys.should have(2).things
-  end
-
+  specify { REDIS.keys.should have(2).things }
 
   it :@reverse_geocode_before_save do
     # [lat: 39.1844571, lng:-120.1227438] -> 
