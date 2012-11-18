@@ -97,6 +97,34 @@ class Craft
   end
 
   ###
+  # materializers
+  ###
+
+  def self.materialize(craft_hash=nil)
+    return Craft.new if craft_hash.blank?
+
+    twitter_craft_hash  = craft_hash[:twitter_craft]  || craft_hash['twitter_craft']
+    facebook_craft_hash = craft_hash[:facebook_craft] || craft_hash['facebook_craft']
+    yelp_craft_hash     = craft_hash[:yelp_craft]     || craft_hash['yelp_craft']
+    website_craft_hash  = craft_hash[:website_craft]  || craft_hash['website_craft']
+
+    web_crafts = []
+    (web_crafts << TwitterCraft.materialize(twitter_craft_hash) ) if twitter_craft_hash.present? 
+    (web_crafts << FacebookCraft.materialize(facebook_craft_hash) ) if facebook_craft_hash.present? 
+    (web_crafts << YelpCraft.materialize(yelp_craft_hash) ) if yelp_craft_hash.present? 
+    (web_crafts << WebsiteCraft.materialize(website_craft_hash) ) if website_craft_hash.present? 
+    web_crafts.reject!{|wc| wc.nil? }
+    crafts = web_crafts.collect(&:craft).reject{|i| i.nil?} # collect all the parent crafts for the web_crafts
+
+    raise "Found multiple crafts bound to these webcrafts" if 1 < crafts.count
+
+    c = crafts.first || Craft.new
+    obj_hash = MaterializeUtil.obj_hash(Craft, craft_hash)
+    c.assign_attributes(obj_hash)
+    c.bind(web_crafts)
+  end
+
+  ###
   # WebCraft bindings
   ###
   def bind(web_craft)
@@ -106,6 +134,7 @@ class Craft
       self.address = wc.address if (:yelp==wc.provider || ( wc.address.present? and not self.address.present?) )
       self.coordinates = wc.coordinates if (:yelp==wc.provider || ( wc.coordinates.present? and not self.coordinates.present?) )
     end
+    self
   end
 
   def unbind(provider)
@@ -121,6 +150,7 @@ class Craft
       else
         raise "Unknown WebCraft provider: #{provider}"
     end
+    self
   end
 
   ###

@@ -5,6 +5,7 @@ require 'extentions/symbolize'
 # load utils
 require 'uri'
 require 'utils/redis_auto_expire'
+require 'utils/materialize_util'
 
 # load configs
 require 'config/redis_cfg'

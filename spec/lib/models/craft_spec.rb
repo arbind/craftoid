@@ -12,6 +12,97 @@ describe :Craft do
   end
 
 
+  ##
+  #   Check materializing a new instance
+  ##
+  context :WHEN_SUBJECT_DOESNT_EXIST do
+    it :@@materialize_empty do
+      c = Craft.materialize()
+      c.should_not be_nil
+    end
+
+    it :@@materialize_with_web_crafts do
+      y = YelpCraft.new(    {name: 'yelp-name',     description: 'yelp-name',     website: 'my-site.com', href: 'yelp.com/my-yelp'})
+      w = WebsiteCraft.new( {name: 'website-name',  description: 'website-name',  website: 'my-site.com', href: 'website.com/my-website'})
+      t = TwitterCraft.new( {name: 'twitter-name',  description: 'twitter-name',  website: 'my-site.com', href: 'twitter.com/my-twitter'})
+      f = FacebookCraft.new({name: 'facebook-name', description: 'facebook-name', website: 'my-site.com', href: 'facebook.com/my-facebook'})
+
+      subject_attributes = {}
+      subject_attributes[:score] = 22
+      subject_attributes[:yelp_craft] = y.attributes
+      subject_attributes[:website_craft] = w.attributes
+      subject_attributes[:twitter_craft] = t.attributes
+      subject_attributes[:facebook_craft] = f.attributes
+
+      c = Craft.materialize(subject_attributes)
+
+      c.should_not be_nil
+      (1+c.score).should eq 1+subject_attributes[:score] # ensure score is an Integer by adding 1
+
+      c.yelp_craft.yelp_id.should eq y.yelp_id
+      c.twitter_craft.screen_name.should eq t.screen_name
+      c.website_craft.url.should eq w.url
+      c.facebook_craft.web_craft_id.should eq f.web_craft_id
+    end
+  end
+
+  ##
+  #   Check materializing an existing instance
+  ##
+  context :WHEN_SUBJECT_ALREADY_EXIST do
+    before(:all) do
+      # save a craft with embedded web crafts
+      @savedW = WebsiteCraft.new( {web_craft_id: 'saved-website-id',  username: '', name: 'saved-website-name',  description: 'saved-website-name',  website: 'my-saved-site.com', href: 'website.com/my-saved-website'})
+      @savedF = FacebookCraft.new({web_craft_id: 'saved-facebook-id', username: '', name: 'saved-facebook-name', description: 'saved-facebook-name', website: 'my-saved-site.com', href: 'facebook.com/my-saved-facebook'})
+      @savedT = TwitterCraft.new( {web_craft_id: '1234',       username: 'mytruck', name: 'saved-twitter-name',  description: 'saved-twitter-name',  website: 'my-saved-site.com', href: 'twitter.com/my-saved-twitter'})
+      @savedY = YelpCraft.new(    {web_craft_id: 'saved-yelp-id',     username: '', name: 'saved-yelp-name',     description: 'saved-yelp-name',     website: 'my-saved-site.com', href: 'yelp.com/my-saved-yelp'})
+      @savedWebcrafts = [@savedW, @savedF, @savedT, @savedY]
+      @savedC = Craft.new
+      @savedC.bind(@savedWebcrafts)
+      @savedC.save
+
+      # save another craft with a twitter craft
+      @savedT2 = TwitterCraft.new( {name: 'saved2-twitter-name',  description: 'saved2-twitter-name',  website: 'my-saved2-site.com', href: 'twitter.com/my-saved2-twitter2'})
+      @savedC2 = Craft.new
+      @savedC2.bind(@savedT2)
+      @savedC2.save
+    end
+
+    after(:all) do
+      @savedC.delete
+      @savedC2.delete
+    end
+
+    it :@@materialize_from_a_web_craft do
+      subject_attributes = {}
+      subject_attributes[:score] = 42
+      subject_attributes[:twitter_craft] = @savedT.attributes
+
+      c = Craft.materialize(subject_attributes) # should find the saved craft, fully populated with all other web crafts
+
+      c.should_not be_nil
+      (1+c.score).should eq 1+subject_attributes[:score] # ensure score is an Integer by adding 1
+
+      c.yelp_craft.yelp_id.should eq @savedY.yelp_id
+      c.twitter_craft.screen_name.should eq @savedT.username
+      c.website_craft.url.should eq @savedW.url
+      c.facebook_craft.web_craft_id.should eq @savedF.web_craft_id
+    end
+
+    ##
+    #   Check materializing from invalid attributes
+    ##
+    it :@@materialize_raises do
+      subject_attributes = {}
+      subject_attributes[:yelp_craft] = @savedY.attributes      # bound to @savedC
+      subject_attributes[:twitter_craft] = @savedT2.attributes  # bound to @savedC2 - a different craft
+
+      lambda {Craft.materialize(subject_attributes)}.should raise_error # embeded web_crafts in attributes are bound to different crafts
+    end
+
+  end
+
+
   context :WITH_WEBCRAFTS do
 
     before(:each) do

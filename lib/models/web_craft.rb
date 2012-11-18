@@ -7,7 +7,7 @@ class WebCraft
   # provider info
   field :web_craft_id
   field :username
-  field :href # url to page on provider's site  - e.g. facebook.com/pages/:web_craft
+  field :href # url to page on provider's site  - e.g. facebook.com/pages/:web_craft_id
 
   # web_craft info
   field :name
@@ -48,7 +48,8 @@ class WebCraft
     subject_attributes.delete('web_craft_id')
     subject_attributes[:web_craft_id] = wc_id
 
-    web_craft.assign_attributes(subject_attributes)
+    obj_hash = MaterializeUtil.obj_hash(self, subject_attributes)    
+    web_craft.assign_attributes(obj_hash)
     web_craft
   end
 
