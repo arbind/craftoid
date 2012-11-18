@@ -4,7 +4,8 @@ class Craft
   include Geocoder::Model::Mongoid
   include GeoAliases
 
-  field :ranking_score,   type: Integer, default: 0
+  field :rank,            type: Integer,  default: 0
+  field :score,           type: Integer,  default: 0
   field :last_tweeted_at, type: DateTime, default: nil
 
   # geocoder fields
@@ -37,6 +38,8 @@ class Craft
   reverse_geocoded_by :coordinates
   before_save :geocode_this_location!
 
+  before_save :rerank
+
   # +++ TODO: add scopes
   # scope with_twitter_craft
   # scope without_twitter_craft
@@ -47,52 +50,56 @@ class Craft
   # scope with_website_craft
   # scope without_website_craft
 
-### 
-#   SCORE: sets the ranking_score and gives it points for being active
-#     More active crafts will be ranked higher
-#     Whenever score is set, the craft automatically gets points for being active.
-#     So if you set craftA.score=10 today, and craftB.score=10 tomorrow then craftB will rank higher than craftA
-#     If you set craftA.score=10 today, and at the same time tomorrow you again set craftA.score=10,
-#     then ranking_score will go up for for craftA by the number of ms in a day (1000 * 60 * 60 * 24) 86,400,000
-#     
-#     DAY_POINTS
-#     when setting the score, you can think of each point as 1 day
-#     if you set craftA.score = 10 only once
-#     and then you set craftB.score = 1 every day,
-#     then crafB will start to rank higher than craftA after 11 days
-#
-#     calculation:
-#     ranking_score = now + (score * DAY_POINTS)
-#     setting the same score at different times will result in a different ranking_score
-#     The smallest score you can set is 0 (which is still higher than a score of 1 that was set 2 days ago)
-#     ranking_score is represented current unix timestamp (Time.now.to_i) plus score * milliseconds in a day
-### 
-  DAY_POINTS = (1000 * 60 * 60 * 24)  # milliseconds in a day
-  def score=(score)
-    s = score * DAY_POINTS
+
+  ### 
+  # rescore! 
+  # saves with a new score (which also triggers a rerank)
+  ###
+  def rescore!(score) self.score=score; save! end
+
+  ###
+  # score 
+  # setting score triggers a rerank
+  # min score = 0
+  # max score = 100
+  ###
+  def score=(points)
+    s = points
     s = 0 if s < 0
-    rank = Time.now.to_i + s
-    update_attribute(ranking_score: rank)
+    s = 100 if s > 100
+    self[:score] = s
+    rerank
   end
 
-###
-#   formaters
-###
-  def map_pins # can be dropped onto google maps
-    {
-      "#{_id}" => {
-        name: name,
-        lat: lat,
-        lng: lng,
-        website: website,
-        now_active: now_active?
-      }
-    }
+  ### 
+  # RERANK! sets the ranking_score and gives it points for being active
+  #     More active crafts will be ranked higher
+  #     Whenever score is set, the craft automatically gets points for being active.
+  #     So if you set craftA.score=10 today, and craftB.score=10 tomorrow then craftB will rank higher than craftA
+  #     If you set craftA.score=10 today, and at the same time tomorrow you again set craftA.score=10,
+  #     then ranking_score will go up for for craftA by the number of ms in a day (60 * 60 * 24) 86,400
+  #     
+  #     DAY_POINTS
+  #     when setting the score, you can think of each point as 1 day
+  #     if you set craftA.score = 10 only once
+  #     and then you set craftB.score = 1 every day,
+  #     then crafB will start to rank higher than craftA after 11 days
+  #
+  #     calculation:
+  #     ranking_score = now + (score * DAY_POINTS)
+  #     setting the same score at different times will result in a different ranking_score
+  #     The smallest score you can set is 0 (which is still higher than a score of 1 that was set 2 days ago)
+  #     ranking_score is represented current unix timestamp (Time.now.to_i) + (score * seconds in a day)
+  ### 
+  DAY_POINTS = (60 * 60 * 24)  # seconds in a day
+  def rerank
+    s = score * DAY_POINTS
+    self.rank = Time.now.to_i + s
   end
 
-###
-#   WebCraft bindings
-###
+  ###
+  # WebCraft bindings
+  ###
   def bind(web_craft)
     web_craft_list = *web_craft 
     web_craft_list.each do |wc|
@@ -117,10 +124,72 @@ class Craft
     end
   end
 
-###
-#   convenience
-###
-  def is_mobile?( )is_mobile end
+  ###
+  # util
+  ###
+  def now_active?
+    time = last_tweeted_at
+    return false if time.nil?
+
+    time = time + (-Time.zone_offset(Time.now.zone))
+    2.days.ago < time # consider this craft to be active if there was a tweet in the last 2 days
+  end
+
+  def how_long_ago_was_last_tweet
+    return @how_long_ago_was_last_tweet if @how_long_ago_was_last_tweet.present?
+    x = Util.how_long_ago_was(last_tweeted_at) if last_tweeted_at.present?
+    x ||= nil
+    @how_long_ago_was_last_tweet = x
+  end
+
+  def has_essence(essence_tag) has_tag(:essence, essence_tag) end
+  def add_essence(essence_tag) add_tag(:essence, essence_tag) end
+  def remove_essence(essence_tag) remove_tag(:essence, essence_tag) end
+
+  def has_theme(theme_tag) has_tag(:theme, theme_tag) end
+  def add_theme(theme_tag) add_tag(:theme, theme_tag) end
+  def remove_theme(theme_tag) remove_tag(:theme, theme_tag) end
+
+
+  ###
+  # The Craft's Brand
+  ###
+  def name
+    x = twitter_craft.name if twitter_craft.present?
+    x ||= yelp_craft.name if yelp_craft.present?
+    x ||= facebook_craft.name if facebook_craft.present?
+    x
+  end
+
+  def description
+    x = twitter_craft.description if twitter_craft.present?
+    x ||= yelp_craft.description if yelp_craft.present?
+    x ||= facebook_craft.description if facebook_craft.present?
+    x
+  end
+
+  def website
+    # first see if there is a website specified
+    # +++ TODO reject urls of providers
+    x = yelp_craft.website if yelp_craft.present?
+    x ||= twitter_craft.website if twitter_craft.present?
+    x ||= facebook_craft.website if facebook_craft.present?
+    # if not, look for an href to a service
+    x ||= twitter_craft.href if twitter_craft.present?
+    x ||= facebok_craft.href if facebook_craft.present?
+    x ||= yelp_craft.href if yelp_craft.present?
+    x
+  end
+
+  def profile_image_url()             twitter_craft.present? ? twitter_craft.profile_image_url             : nil    end
+  def profile_background_tile()       twitter_craft.present? ? twitter_craft.profile_background_tile       : false  end
+  def profile_background_color()      twitter_craft.present? ? twitter_craft.profile_background_color      : 'grey' end
+  def profile_background_image_url()  twitter_craft.present? ? twitter_craft.profile_background_image_url  : ''     end
+
+  ###
+  # convenience
+  ###
+  def is_mobile?() is_mobile end
 
   def is_for_food_truck?()
     is_mobile? and is_for_food?
@@ -129,6 +198,8 @@ class Craft
     self.is_mobile = true
     set_as_food!()
   end
+
+  def tweet_stream_id() twitter_craft.present? ? twitter_craft.tweet_stream_id : nil end
 
   def is_for_food?()  has_essence(:food)    end
   def is_for_fit?()   has_essence(:fitness) end
@@ -155,101 +226,19 @@ class Craft
   def does_bbq()     add_theme(:bbq)        end
   def does_yoga()    add_theme(:yoga)       end
 
-
-  # Derive the Craft's Brand
-  def name
-    x = twitter_craft.name if twitter_craft.present?
-    x ||= yelp_craft.name if yelp_craft.present?
-    x ||= facebook_craft.name if facebook_craft.present?
-    x
-  end
-
-  def description
-    x = twitter_craft.description if twitter_craft.present?
-    x ||= yelp_craft.description if yelp_craft.present?
-    x ||= facebook_craft.description if facebook_craft.present?
-    x
-  end
-
-  def website
-    # first see if there is a website specified
-    x = yelp_craft.website if yelp_craft.present?
-    x ||= twitter_craft.website if twitter_craft.present?
-    x ||= facebook_craft.website if facebook_craft.present?
-    # if not, look for an href to a service
-    x ||= twitter_craft.href if twitter_craft.present?
-    x ||= facebok_craft.href if facebook_craft.present?
-    x ||= yelp_craft.href if yelp_craft.present?
-    x
-  end
-
-  def profile_image_url
-    x = twitter_craft.profile_image_url if twitter_craft.present?
-    #+++ TODO ||= facebook profile image
-    x
-  end
-  def profile_background_color
-    x = twitter_craft.profile_background_color if twitter_craft.present?
-    x ||= 'grey'
-    x
-  end
-  def profile_background_image_url
-    x = twitter_craft.profile_background_image_url if twitter_craft.present?
-    x ||= ''
-    x
-  end
-  def profile_background_tile
-    if twitter_craft.present?
-      x = twitter_craft.profile_background_tile
-    else
-      x = false 
-    end
-    x
-  end
-  # Craft Branding
-
-  # convenient delegations
-  def now_active?
-    time = last_tweeted_at
-    return false if time.nil?
-
-    time = time + (-Time.zone_offset(Time.now.zone))
-    2.days.ago < time # consider this craft to be active if there was a tweet in the last 2 days
-  end
-
-  def tweet_stream_id
-    twitter_craft.present? ? twitter_craft.tweet_stream_id : nil
-  end
-
-  def how_long_ago_was_last_tweet
-    return @how_long_ago_was_last_tweet if @how_long_ago_was_last_tweet.present?
-    x = Util.how_long_ago_was(last_tweeted_at) if last_tweeted_at.present?
-    x ||= nil
-    @how_long_ago_was_last_tweet = x
-  end
-
-
-###
-#   util
-###
-  def has_essence(essence)
-    has_tag(:essence, essence_tag)
-  end
-  def add_essence(essence_tag)
-    add_tag(:essence, essence_tag)
-  end
-  def remove_essence(essence_tag)
-    remove_tag(:essence, essence_tag)
-  end
-
-  def has_theme(theme)
-    has_tag(:theme, theme_tag)
-  end
-  def add_theme(theme_tag)
-    add_tag(:theme, theme_tag)
-  end
-  def remove_theme(theme_tag)
-    remove_tag(:theme, theme_tag)
+  ###
+  # formaters
+  ###
+  def map_pins # can be dropped onto google maps
+    {
+      "#{_id}" => {
+        name: name,
+        lat: lat,
+        lng: lng,
+        website: website,
+        now_active: now_active?
+      }
+    }
   end
 
 private
@@ -269,24 +258,26 @@ private
     end
   end
 
-
   def has_tag(list_name, tag)
-    tags = self[list_name]
+    list_att = "#{list_name}_tags".symbolize
+    tags = self[list_att]
     tags.include? tag
   end
   def add_tag(list_name, tag)
-    tags = self[list_name]
+    list_att = "#{list_name}_tags".symbolize
+    tags = self[list_att]
     return tags if has_tag(list_name, tag)
     tags << tag
-    self[list_name] = tags
+    self[list_att] = tags
     save!
     tags
   end
   def remove_tag(list_name, tag)
-    tags = self[list_name]
-    return tags if has_tag(list_name, tag)
+    list_att = "#{list_name}_tags".symbolize
+    tags = self[list_att]
+    return tags unless has_tag(list_name, tag)
     tags -= [ tag ]
-    self[list_name] = tags
+    self[list_att] = tags
     save!
     tags
   end
