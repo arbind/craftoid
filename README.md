@@ -2,10 +2,18 @@
 
 Domain model objects and search service for an organization's craft and their (embedded) webcrafts.
 
-    requires MongoDB server for saving models
-    requires redis server for geo caching
+    requires a mongoDB server for saving models
+    requires a redis server for geo caching
 
 ## Installation
+
+Create your application without ORM:
+
+    $ rails new crafty_app -T -J -O
+    # -O excludes ActiveRecord ORM becuase the gem use Mongoid
+    # -T excludes the Test/Unit (use rspec instead)
+    # -J excludes the prototype.js (use jQuery instead)
+
 
 Add this line to your application's Gemfile:
 
@@ -17,8 +25,17 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install craftoid (once it is published)
+    $ gem install craftoid (once and if it is published)
 
+## Usage
+
+Start the console for your application:
+
+    $ rails c
+    1.9.3 > t = TwitterCraft.new
+    1.9.3 > c = Craft.new
+    1.9.3 > c.bind t
+    1.9.3 > c.save!
 
 ## Testing
 
