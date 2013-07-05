@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe :Craft do
-  specify { Craft.should_not be_nil }  
+  specify { Craft.should_not be_nil }
   subject { Craft.new }
 
   before(:each) do
@@ -142,7 +142,7 @@ describe :Craft do
 
       @craft.twitter_craft.should eq @t
       @craft.yelp_craft.should eq @y
-      @craft.facebook_craft.should eq @f 
+      @craft.facebook_craft.should eq @f
       @craft.website_craft.should eq @w
     end
 
@@ -157,7 +157,7 @@ describe :Craft do
 
       @craft.twitter_craft.should eq @t
       @craft.yelp_craft.should eq @y
-      @craft.facebook_craft.should eq @f 
+      @craft.facebook_craft.should eq @f
       @craft.website_craft.should eq @w
 
       @craft.unbind(:twitter)
@@ -262,7 +262,7 @@ describe :Craft do
         @t = TwitterCraft.new( {name: 'twitter-name',  description: 'twitter-name',  website: 'my-site.com', href: 'twitter.com/my-twitter'})
         @craft.bind(@t)
 
-        @craft.update_attribute(:address,'3rd Street Promenade, Santa Monica CA')  
+        @craft.update_attribute(:address,'3rd Street Promenade, Santa Monica CA')
         @craft.coordinates.should be_present
         @craft.lat.should be_between(33, 35)     # Santa Monica lat is about 34.0169509
         @craft.lng.should be_between(-120, -117) # Santa Monica lng is about -118.4977229
@@ -284,7 +284,7 @@ describe :Craft do
       @craft.is_mobile?.should eq false
       @craft.is_for_food?.should eq false
       @craft.is_for_food_truck?.should eq false
-      @craft.set_as_food_truck
+      @craft.set_as_food_truck!
       @craft.is_mobile?.should eq true
       @craft.is_for_food?.should eq true
       @craft.is_for_food_truck?.should eq true
@@ -292,7 +292,7 @@ describe :Craft do
 
     it :@remove_essence_tag do
       @craft.is_for_food_truck?.should eq false
-      @craft.set_as_food_truck
+      @craft.set_as_food_truck!
       @craft.is_for_food_truck?.should eq true
       @craft.remove_essence(:food)
       @craft.is_for_food_truck?.should eq false

@@ -11,7 +11,7 @@ describe :gem do
     end
 
     it :ping_mongoid do
-      Mongoid.database.command({ping: 1}).should include 'ok'
+      Mongoid.default_session.command({ping: 1}).should include 'ok'
     end
   end
 

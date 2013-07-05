@@ -36,6 +36,7 @@ describe :GeoAliases do
     @host.lng.should be_blank
 
     @host.update_attribute(:address,'3rd Street Promenade, Santa Monica CA')
+    @host.save!
     @host.coordinates.should be_present
     @host.lat.should be_between(33, 35)     # Santa Monica lat is about 34.0169509
     @host.lng.should be_between(-120, -117) # Santa Monica lng is about -118.4977229
@@ -71,8 +72,8 @@ describe :GeoAliases do
   specify { REDIS.keys.should have(2).things }
 
   it :@reverse_geocode_before_save do
-    # [lat: 39.1844571, lng:-120.1227438] -> 
-    #   '100 North Lake Blvd, Tahoe City CA 96145'  or  
+    # [lat: 39.1844571, lng:-120.1227438] ->
+    #   '100 North Lake Blvd, Tahoe City CA 96145'  or
     #   'Tamarack Lodge, Tahoe National Forest, Dollar Point, CA 96145, USA'
     @host.address.should be_blank
     @host.coordinates.should be_blank

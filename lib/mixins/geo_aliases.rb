@@ -19,7 +19,11 @@ module GeoAliases
 #   subject.geo_point = { lat:34.0169509, lng:-118.4977229 }
 #   subject.reverse_geocode  # Will populate address
 ###
-  def Geocoder.clear_cache() Geocoder.cache.expire(:all) if Geocoder.cache.present? end
+  def Geocoder.clear_cache()
+    lookup = Geocoder::Lookup.get(Geocoder.config.lookup)
+    cache = lookup.cache if lookup
+    cache.expire(:all) if cache
+  end
 
   # geocoding  aliases
   def ip_address() address end
@@ -71,11 +75,11 @@ module GeoAliases
   # /geo point hash representation
 
   def geocode_this_location!
-    if self.lat.present? and (new? or changes[:coordinates].present?)
+    if lat.present? and (new_record? or changes["coordinates"].present?)
       reverse_geocode # update the address
-    elsif address.present? and (new? or changes[:address].present?)
+    elsif address.present? and (new_record? or changes["address"].present?)
       geocode # update lat, lng
-    elsif self.location_hash.present? and not self.lat.present? and (new? or changes[:location_hash].present?)
+    elsif location_hash.present? and not lat.present? and (new_record? or changes["location_hash"].present?)
       l = []
       (l << location_hash[:address].to_s) if location_hash[:address].present?
       (l << location_hash[:city].to_s) if location_hash[:city].present?

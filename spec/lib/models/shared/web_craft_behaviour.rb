@@ -23,11 +23,11 @@ shared_examples :WebCraft do |subclass_info|
   let (:subject_id)         { subclass_info[:subject][:id] }      # eg: 45345, or '45677', or yelp-biz-name', or 'http://mysite.com'. etc.
   let (:subject_handle)     { subclass_info[:subject][:handle] }  # eg: username or handle
   let (:subject_attributes) { subclass_info[:subject][:attributes].merge({'web_craft_id'=>subject_id, 'username'=>subject_handle}) }
-  subject                   { clazz.new subject_attributes }
+  let (:subject)            { clazz.new subject_attributes }
 
   ##
   #   Check that the subclass exists
-  #   eg: clazz = TwitterCraft 
+  #   eg: clazz = TwitterCraft
   ##
   specify { clazz.should_not be_nil }
   specify { subject.should be_an_instance_of clazz }
@@ -50,7 +50,7 @@ shared_examples :WebCraft do |subclass_info|
   end
 
   ##
-  #   Check basic instance methods 
+  #   Check basic instance methods
   #   eg: subject = TwitterCraft.new (atts)
   ##
   it :@provider do # @instance_method
@@ -121,13 +121,15 @@ shared_examples :WebCraft do |subclass_info|
   #   Check materializing an existing instance
   ##
   context :when_subject_already_exists do
-    before(:all) do
+    let (:new_craft) {
       c = Craft.new
       c.bind(subject)
       c.save
-    end
+      c
+    }
+    before { new_craft }
     after(:all) do
-      subject.craft.delete # deleting the parent craft also deletes the embedded webcraft
+      new_craft.delete # deleting the parent craft also deletes the embedded webcraft
     end
 
     it :@@materialize do

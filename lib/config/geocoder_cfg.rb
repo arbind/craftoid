@@ -2,22 +2,10 @@ require 'geocoder' # configure geocoder to use redis:
 
 GEOCODER_CACHE_TTL = 86400 # (60s * 60m * 24h)  # +++ TODO move TTL for geo cache into configs
 
-Geocoder.configure do |config|
-  config.lookup = :google # geocoding service (see below for supported options):
+geocoder_config = {
+  lookup: :google,
+  cache: RedisAutoExpire.new(REDIS, GEOCODER_CACHE_TTL),
+  cache_prefix: "gO:" # gee-oooh :)
+}
 
-  # Only use an API key if paying for google premier (100K requests/day):
-  # https://developers.google.com/maps/documentation/javascript/tutorial#api_key
-  # arbind.thakur@gmail.com: https://code.google.com/apis/console/?pli=1#project:954168963539:access
-  # config.api_key = "AIzaSyA6SvDNT6S-hTO1EydsE93i2yx7vaoDfNo" # food-truck.me
-
-  # geocoding service request timeout, in seconds (default 3):
-  # config.timeout = 5
-
-  # set default units to kilometers:
-  # config.units = :km
-
-  # caching (see below for details):
-  # config.cache = REDIS
-  config.cache = RedisAutoExpire.new(REDIS, GEOCODER_CACHE_TTL) if REDIS.present?
-  config.cache_prefix = "gO:" # gee-oooh :)
-end
+Geocoder.configure geocoder_config

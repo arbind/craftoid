@@ -214,7 +214,7 @@ class Craft
   def is_for_food_truck?()
     is_mobile? and is_for_food?
   end
-  def set_as_food_truck()
+  def set_as_food_truck!()
     self.is_mobile = true
     set_as_food!()
   end
@@ -237,9 +237,9 @@ class Craft
 
 
   def serves_taco?()  has_theme(:taco)      end
-  def serves_sushi?() has_theme(:taco)      end
-  def serves_bbq?()   has_theme(:taco)      end
-  def serves_yoga?()  has_theme(:taco)      end
+  def serves_sushi?() has_theme(:sushi)     end
+  def serves_bbq?()   has_theme(:bbq)       end
+  def serves_yoga?()  has_theme(:yoga)      end
 
   def does_taco()     add_theme(:taco)      end
   def does_sushi()    add_theme(:sushi)     end
