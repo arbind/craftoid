@@ -23,9 +23,21 @@ And then execute:
 
     $ bundle
 
-Or install it yourself as:
 
-    $ gem install craftoid (once and if it is published)
+Create mongoid config file (otherwise craftoid db will be used to store crafts):
+
+    rails generate mongoid:config
+
+Add an empty Craft model in app/models/craft.rb with:
+
+    class Craft
+    end
+
+Opening the Craft class brings in awareness of the class for rake.
+
+Now create the geo-spacial indexes:
+
+    rake db:mongoid:create_indexes
 
 ## Usage
 
@@ -65,3 +77,27 @@ The default rake task will run rspec and coverage test:
 
 1. ref: [http://rakeroutes.com/blog/lets-write-a-gem-part-two/](http://rakeroutes.com/blog/lets-write-a-gem-part-two/)
 2. ref: [http://railscasts.com/episodes/245-new-gem-with-bundler](http://railscasts.com/episodes/245-new-gem-with-bundler)
+
+
+Example mongoid.yml file:
+
+    development:
+      host: localhost
+      database: craft_service_development
+
+    test:
+      host: localhost
+      database: craft_service_test
+
+    # set these environment variables on your prod server
+    production:
+      host: <%= ENV['MONGOID_HOST'] %>
+      port: <%= ENV['MONGOID_PORT'] %>
+      username: <%= ENV['MONGOID_USERNAME'] %>
+      password: <%= ENV['MONGOID_PASSWORD'] %>
+      database: <%= ENV['MONGOID_DATABASE'] %>
+      # slaves:
+      #   - host: slave1.local
+      #     port: 27018
+      #   - host: slave2.local
+      #     port: 27019
