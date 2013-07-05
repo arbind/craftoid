@@ -7,10 +7,12 @@ require 'uri'
 require 'utils/redis_auto_expire'
 require 'utils/materialize_util'
 
-# load configs
-require 'config/redis_cfg'
-require 'config/mongoid_cfg'
-require 'config/geocoder_cfg' # depends on redis
+if 'test' == ENV['CRAFTOID_ENV']
+  # load configs when testing
+  require 'config/redis_cfg'
+  require 'config/mongoid_cfg'
+  require 'config/geocoder_cfg' # depends on redis
+end
 
 # load models
 require "mixins/geo_aliases"

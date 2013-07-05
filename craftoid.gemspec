@@ -17,11 +17,10 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib", "lib/config"]
 
-  gem.add_runtime_dependency 'redis'
-  gem.add_runtime_dependency 'geocoder'
-  gem.add_runtime_dependency 'mongoid', '2.4.8'
-  gem.add_runtime_dependency 'bson_ext'
-
+  gem.add_development_dependency 'redis'
+  gem.add_development_dependency 'geocoder'
+  gem.add_development_dependency 'mongoid', '2.4.8'
+  gem.add_development_dependency 'bson_ext'
   gem.add_development_dependency 'rake'
   gem.add_development_dependency 'rspec'
   gem.add_development_dependency 'simplecov'

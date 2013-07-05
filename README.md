@@ -15,8 +15,12 @@ Create your application without ORM:
     # -J excludes the prototype.js (use jQuery instead)
 
 
-Add this line to your application's Gemfile:
+Add these dependencies (appropriately) to your Gemfile:
 
+    gem 'geocoder'
+    gem 'redis'
+    gem 'mongoid', github: 'mongoid/mongoid', ref: '3b1ada6'
+    gem 'bson_ext'
     gem 'craftoid', :git => 'git@github.com:arbind/craftoid.git'
 
 And then execute:

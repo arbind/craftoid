@@ -1,5 +1,6 @@
 # setup for test environment
 ENV['RACK_ENV'] = 'test'
+ENV['CRAFTOID_ENV'] = 'test'
 
 # set up test coverage
 require 'simplecov'
