@@ -30,9 +30,9 @@ class Craft
   embeds_one :facebook_craft
   embeds_one :website_craft
 
-  index :search_tags
-  index :essence_tags
-  index :theme_tags
+  index({ search_tags: 1 })
+  index({ essence_tags: 1 })
+  index({ theme_tags: 1 })
 
   geocoded_by :address
   reverse_geocoded_by :coordinates
@@ -50,14 +50,14 @@ class Craft
   # scope with_website_craft
   # scope without_website_craft
 
-  ### 
-  # rescore! 
+  ###
+  # rescore!
   # saves with a new score (which also triggers a rerank)
   ###
   def rescore!(score) self.score=score; save! end
 
   ###
-  # score 
+  # score
   # setting score triggers a rerank
   # min score = 0
   # max score = 100
@@ -70,14 +70,14 @@ class Craft
     rerank
   end
 
-  ### 
+  ###
   # RERANK! sets the ranking_score and gives it points for being active
   #     More active crafts will be ranked higher
   #     Whenever score is set, the craft automatically gets points for being active.
   #     So if you set craftA.score=10 today, and craftB.score=10 tomorrow then craftB will rank higher than craftA
   #     If you set craftA.score=10 today, and at the same time tomorrow you again set craftA.score=10,
   #     then ranking_score will go up for for craftA by the number of ms in a day (60 * 60 * 24) 86,400
-  #     
+  #
   #     DAY_POINTS
   #     when setting the score, you can think of each point as 1 day
   #     if you set craftA.score = 10 only once
@@ -89,7 +89,7 @@ class Craft
   #     setting the same score at different times will result in a different ranking_score
   #     The smallest score you can set is 0 (which is still higher than a score of 1 that was set 2 days ago)
   #     ranking_score is represented current unix timestamp (Time.now.to_i) + (score * seconds in a day)
-  ### 
+  ###
   DAY_POINTS = (60 * 60 * 24)  # seconds in a day
   def rerank
     s = score * DAY_POINTS
@@ -109,10 +109,10 @@ class Craft
     website_craft_hash  = craft_hash[:website_craft]  || craft_hash['website_craft']
 
     web_crafts = []
-    (web_crafts << TwitterCraft.materialize(twitter_craft_hash) ) if twitter_craft_hash.present? 
-    (web_crafts << FacebookCraft.materialize(facebook_craft_hash) ) if facebook_craft_hash.present? 
-    (web_crafts << YelpCraft.materialize(yelp_craft_hash) ) if yelp_craft_hash.present? 
-    (web_crafts << WebsiteCraft.materialize(website_craft_hash) ) if website_craft_hash.present? 
+    (web_crafts << TwitterCraft.materialize(twitter_craft_hash) ) if twitter_craft_hash.present?
+    (web_crafts << FacebookCraft.materialize(facebook_craft_hash) ) if facebook_craft_hash.present?
+    (web_crafts << YelpCraft.materialize(yelp_craft_hash) ) if yelp_craft_hash.present?
+    (web_crafts << WebsiteCraft.materialize(website_craft_hash) ) if website_craft_hash.present?
     web_crafts.reject!{|wc| wc.nil? }
     crafts = web_crafts.collect(&:craft).reject{|i| i.nil?} # collect all the parent crafts for the web_crafts
 
@@ -128,7 +128,7 @@ class Craft
   # WebCraft bindings
   ###
   def bind(web_craft)
-    web_craft_list = *web_craft 
+    web_craft_list = *web_craft
     web_craft_list.each do |wc|
       build_web_craft(wc)
       self.address = wc.address if (:yelp==wc.provider || ( wc.address.present? and not self.address.present?) )
@@ -177,7 +177,7 @@ class Craft
   #   website:
   #     Website url takes precedence, then Twitter, Facebook and Yelp
   ###
-  def name 
+  def name
     x = website_craft.name  if website_craft.present?
     x = yelp_craft.name     if yelp_craft.present?
     x = facebook_craft.name if facebook_craft.present?
