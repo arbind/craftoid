@@ -1,9 +1,9 @@
 # Craftoid
 
-Domain model objects and search service for an organization's craft and their (embedded) webcrafts.
+Domain model objects for an organization's craft and their (embedded) webcrafts.
 
-    requires a mongoDB server for saving models
-    requires a redis server for geo caching
+    uses a mongoDB server for saving models
+    uses a redis server for geo caching
 
 ## Installation
 
@@ -14,14 +14,12 @@ Create your application without ORM:
     # -T excludes the Test/Unit (use rspec instead)
     # -J excludes the prototype.js (use jQuery instead)
 
-
 Add these dependencies (appropriately) to your Gemfile:
 
-    gem 'geocoder'
-    gem 'redis'
-    gem 'mongoid', github: 'mongoid/mongoid', ref: '3b1ada6'
-    gem 'bson_ext'
-    gem 'craftoid', :git => 'git@github.com:arbind/craftoid.git'
+    gem 'redis'         , '~>3.0.4'
+    gem 'geocoder'      , '~>1.1.8'
+    gem 'mongoid'       , github: 'mongoid/mongoid', ref: '3b1ada6' # 4.0.0(master)
+    gem 'craftoid'      , github: 'arbind/craftoid', ref: 'b21f06c73c'
 
 And then execute:
 

@@ -7,12 +7,12 @@ class WebCraft
   # provider info
   field :web_craft_id
   field :username
-  field :href # url to page on provider's site  - e.g. facebook.com/pages/:web_craft_id
+  field :href # url to provider's site e.g. facebook.com/pages/:web_craft_id
 
   # web_craft info
   field :name
   field :description
-  field :website # craft's actual website
+  field :website # actual website for the craft
   field :location_hash, type: Hash, default: {}
   field :address, default: nil
   field :coordinates, type: Array, default: []
@@ -24,7 +24,6 @@ class WebCraft
   before_save :format_attributes
   before_save :geocode_this_location!
 
-  # convert classname to provider name: e.g. TwitterCraft -> :twitter
   def self.provider
     name[0..-6].symbolize
   end
@@ -41,14 +40,14 @@ class WebCraft
 
     wc_id = wc_id.to_s # make sure web_craft_id is a String prior to looking it up
     web_craft = materialize_for_web_craft_id(wc_id)
-    
+
     # assign all the attributes
     subject_attributes = web_craft_hash.deep_dup
     subject_attributes.delete(:web_craft_id)
     subject_attributes.delete('web_craft_id')
     subject_attributes[:web_craft_id] = wc_id
 
-    obj_hash = MaterializeUtil.obj_hash(self, subject_attributes)    
+    obj_hash = MaterializeUtil.obj_hash(self, subject_attributes)
     web_craft.assign_attributes(obj_hash)
     web_craft
   end
@@ -72,11 +71,11 @@ class WebCraft
   end
 
   private
+
   def format_attributes
     self.web_craft_id = web_craft_id.to_s
-    # urlify
     self.website = website.downcase.urlify! if website.looks_like_url?
-    self.href = href.downcase.urlify! if href.looks_like_url?
+    self.href    = href.downcase.urlify! if href.looks_like_url?
   end
 
 end
