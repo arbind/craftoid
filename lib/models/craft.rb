@@ -33,6 +33,10 @@ class Craft
   index({ search_tags: 1 })
   index({ essence_tags: 1 })
   index({ theme_tags: 1 })
+  index({ "yelp_craft.web_craft_id"=>1 },     { unique: true, sparse: true })
+  index({ "twitter_craft.web_craft_id"=>1 },  { unique: true, sparse: true })
+  index({ "facebook_craft.web_craft_id"=>1 }, { unique: true, sparse: true })
+  index({ "website_craft.web_craft_id"=>1 },  { unique: true, sparse: true })
 
   geocoded_by :address
   reverse_geocoded_by :coordinates
