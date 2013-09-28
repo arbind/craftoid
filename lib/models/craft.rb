@@ -6,23 +6,19 @@ class Craft
 
   field :rank,            type: Integer,  default: 0
   field :score,           type: Integer,  default: 0
-  field :last_tweeted_at, type: DateTime, default: nil
+  field :last_tweeted_at, type: DateTime
 
   # geocoder fields
   field :location_hash,   type: Hash,     default: {}
   field :address,         type: String,   default: nil
   field :coordinates,     type: Array,    default: []     # mongoid stores [long, lat] - backwards convention, geocoder knows this, but [lat, lng]
 
-  field :is_mobile,       type: Boolean,  default: false
+  field :is_mobile,       type: Boolean
 
   # indexed tags
-  field :search_tags,     type: Array,    default: []
-  field :essence_tags,    type: Array,    default: []     # e.g. food, fit, fun, travel, home
-  field :theme_tags,      type: Array,    default: []     # e.g. taco, sushi: weight-loss, yoga, etc
-
-  # statuses
-  field :rejected,        type: Boolean,  default: false
-  field :approved,        type: Boolean,  default: false
+  field :search_tags,     type: Array
+  field :essence_tags,    type: Array     # e.g. food, fit, fun, travel, home
+  field :theme_tags,      type: Array     # e.g. taco, sushi: weight-loss, yoga, etc
 
   # embedded web crafts
   embeds_one :twitter_craft
@@ -33,10 +29,6 @@ class Craft
   index({ search_tags: 1 })
   index({ essence_tags: 1 })
   index({ theme_tags: 1 })
-  index({ "yelp_craft.web_craft_id"=>1 },     { unique: true, sparse: true })
-  index({ "twitter_craft.web_craft_id"=>1 },  { unique: true, sparse: true })
-  index({ "facebook_craft.web_craft_id"=>1 }, { unique: true, sparse: true })
-  index({ "website_craft.web_craft_id"=>1 },  { unique: true, sparse: true })
 
   geocoded_by :address
   reverse_geocoded_by :coordinates
@@ -284,10 +276,11 @@ private
   def has_tag(list_name, tag)
     list_att = "#{list_name}_tags".symbolize
     tags = self[list_att]
-    tags.include? tag
+    tags and tags.include? tag
   end
   def add_tag(list_name, tag)
     list_att = "#{list_name}_tags".symbolize
+    self[list_att] ||= []
     tags = self[list_att]
     return tags if has_tag(list_name, tag)
     tags << tag
@@ -298,7 +291,7 @@ private
   def remove_tag(list_name, tag)
     list_att = "#{list_name}_tags".symbolize
     tags = self[list_att]
-    return tags unless has_tag(list_name, tag)
+    return tags unless tags and has_tag(list_name, tag)
     tags -= [ tag ]
     self[list_att] = tags
     save!

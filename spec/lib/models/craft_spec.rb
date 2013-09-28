@@ -281,9 +281,9 @@ describe :Craft do
   describe :ESSENCE_AND_THEME do
 
     it :@is_for_food_truck do
-      @craft.is_mobile?.should eq false
-      @craft.is_for_food?.should eq false
-      @craft.is_for_food_truck?.should eq false
+      @craft.is_mobile?.should_not eq true
+      @craft.is_for_food?.should_not eq true
+      @craft.is_for_food_truck?.should_not eq true
       @craft.set_as_food_truck!
       @craft.is_mobile?.should eq true
       @craft.is_for_food?.should eq true
@@ -291,7 +291,7 @@ describe :Craft do
     end
 
     it :@remove_essence_tag do
-      @craft.is_for_food_truck?.should eq false
+      @craft.is_for_food_truck?.should_not eq true
       @craft.set_as_food_truck!
       @craft.is_for_food_truck?.should eq true
       @craft.remove_essence(:food)
@@ -299,13 +299,13 @@ describe :Craft do
     end
 
     it :@serves_taco do
-      @craft.serves_taco?.should eq false
+      @craft.serves_taco?.should_not eq true
       @craft.does_taco
       @craft.serves_taco?.should eq true
     end
 
     it :@remove_theme_tag do
-      @craft.serves_taco?.should eq false
+      @craft.serves_taco?.should_not eq true
       @craft.does_taco
       @craft.serves_taco?.should eq true
       @craft.remove_theme(:taco)
