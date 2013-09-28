@@ -22,22 +22,27 @@ class WebCraft
   reverse_geocoded_by :coordinates
 
   # before_save :geocode_this_location!
+  after_initialize :stringify_web_craft_id
+  before_save :stringify_web_craft_id
 
   def self.provider
     name[0..-6].symbolize
   end
+
   def self.provider_key
     name[0..-6].downcase
-  end
-  def self.web_craft_type
-    name.underscore # e.g. twitter_craft, yelp_craft, facebook_craft, website_craft, etc.
   end
 
   def provider
     self.class.provider
   end
+
   def provider_key
     self.class.provider_key
   end
 
+private
+  def stringify_web_craft_id
+    self.web_craft_id = self.web_craft_id.to_s if self.web_craft_id
+  end
 end
