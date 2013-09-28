@@ -12,7 +12,7 @@ production:
       options:
         # Change whether the session persists in safe mode by default.
         # (default: false)
-        safe: false
+        safe: true
 
         # Change the default consistency model to :eventual or :strong.
         # :eventual will send reads to secondaries, :strong sends everything
@@ -46,7 +46,7 @@ production:
 
     # Raise an error when performing a #find and the document is not found.
     # (default: true)
-    raise_not_found_error: false
+    # raise_not_found_error: false
 
     # Raise an error when defining a scope with the same name as an
     # existing method. (default: false)
@@ -76,7 +76,7 @@ development:
       options:
         # Change whether the session persists in safe mode by default.
         # (default: false)
-        # safe: false
+        safe: true
 
         # Change the default consistency model to :eventual or :strong.
         # :eventual will send reads to secondaries, :strong sends everything
@@ -110,7 +110,7 @@ development:
 
     # Raise an error when performing a #find and the document is not found.
     # (default: true)
-    raise_not_found_error: false
+    # raise_not_found_error: false
 
     # Raise an error when defining a scope with the same name as an
     # existing method. (default: false)
@@ -133,6 +133,7 @@ test:
         - localhost:27017
       options:
         consistency: :strong
+        safe: true
         # In the test environment we lower the retries and retry interval to
         # low amounts for fast failures.
         max_retries: 1
