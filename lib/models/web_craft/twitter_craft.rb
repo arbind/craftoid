@@ -29,7 +29,7 @@ class TwitterCraft < WebCraft
   field :default_profile
   field :default_profile_image
 
-  embedded_in :craft
+  embedded_in :craft, inverse_of: :twitter
 
   alias_method :twitter_id, :web_craft_id
   alias_method :twitter_id=, :web_craft_id=
@@ -48,9 +48,6 @@ class TwitterCraft < WebCraft
     '@'
   end
 
-  def id_for_fetching
-    screen_name
-  end
 end
 
 

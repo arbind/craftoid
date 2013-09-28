@@ -19,7 +19,7 @@ class FacebookCraft < WebCraft
   field :category
   field :cover
 
-  embedded_in :craft
+  embedded_in :craft, inverse_of: :facebook
 
   alias_method :facebook_id, :web_craft_id
   # normalize attributes for WebCraft
@@ -31,5 +31,5 @@ class FacebookCraft < WebCraft
   def self.provider_key
     'fb'
   end
-  
+
 end

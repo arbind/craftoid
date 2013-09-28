@@ -5,7 +5,7 @@ class YelpCraft < WebCraft
   field :is_claimed
   field :categories
 
-  embedded_in :craft
+  embedded_in :craft, inverse_of: :yelp
 
   alias_method :yelp_id,  :web_craft_id
   alias_method :yelp_id=, :web_craft_id=
