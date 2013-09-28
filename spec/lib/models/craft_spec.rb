@@ -61,43 +61,29 @@ describe :Craft do
       @craft.lng.should eq geo_point[:lng]     # +++ TODO break out geo point testing into separate spec
     end
 
-    it :@map_pins do
-      @t = TwitterCraft.new( {name: 'twitter-name',  description: 'twitter-name',  website: 'my-site.com', href: 'twitter.com/my-twitter'})
-      @craft.twitter = @t
-
-      @craft.update_attribute(:address,'3rd Street Promenade, Santa Monica CA')
-      @craft.coordinates.should be_present
-      @craft.lat.should be_between(33, 35)     # Santa Monica lat is about 34.0169509
-      @craft.lng.should be_between(-120, -117) # Santa Monica lng is about -118.4977229
-
-      pin = @craft.map_pin
-      pin.should be_present
-      pin[:id].should eq @craft._id
-      pin[:lat].should be_between(33, 35)     # Santa Monica lat is about 34.0169509
-      pin[:lng].should be_between(-120, -117) # Santa Monica lng is about -118.4977229
-      pin[:name].should eq @t.name
-      pin[:website].should eq @t.website
-    end
   end
 
   describe :ESSENCE_AND_THEME do
 
     it :@has_essence do
-      @craft.is_mobile?.should_not eq true
+      @craft.mobile?.should_not eq true
       @craft.has_essence?(:food).should_not eq true
-      @craft.has_essence?(:food_truck).should_not eq true
-      @craft.set_as_food_truck!
-      @craft.is_mobile?.should eq true
+      @craft.food_truck = true
+      @craft.food_truck?.should eq true
+      @craft.mobile?.should eq true
       @craft.has_essence?(:food).should eq true
-      @craft.has_essence?(:food_truck).should eq true
+      @craft.food_truck = false
+      @craft.food_truck?.should eq false
+      @craft.mobile?.should eq false
+      @craft.has_essence?(:food).should eq false
     end
 
     it :@remove_essence_tag do
-      @craft.has_essence?(:food_truck).should_not eq true
-      @craft.set_as_food_truck!
-      @craft.has_essence?(:food_truck).should eq true
-      @craft.remove_essence(:food_truck)
-      @craft.has_essence?(:food_truck).should eq false
+      @craft.has_essence?(:food).should_not eq true
+      @craft.food_truck = true
+      @craft.has_essence?(:food).should eq true
+      @craft.remove_essence(:food)
+      @craft.has_essence?(:food).should eq false
     end
 
     it :@has_theme do

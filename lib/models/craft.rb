@@ -6,14 +6,14 @@ class Craft
 
   field :rank           , type: Integer,  default: 0
   field :score          , type: Integer,  default: 0
-  field :last_tweeted_at, type: DateTime
 
   # geocoder fields
   field :location_hash  , type: Hash,     default: {}
   field :address        , type: String,   default: nil
   field :coordinates    , type: Array,    default: []     # mongoid stores [long, lat] - backwards convention, geocoder knows this, but [lat, lng]
 
-  field :is_mobile      , type: Boolean
+  # organizers
+  field :mobile         , type: Boolean
 
   # indexed tags
   field :search_tags    , type: Array
@@ -26,15 +26,16 @@ class Craft
   embeds_one :facebook  , class_name: 'FacebookCraft'
   embeds_one :website   , class_name: 'WebsiteCraft'
 
-  index({ search_tags: 1 })
-  index({ essence_tags: 1 })
-  index({ theme_tags: 1 })
-
   before_save         :geocode_this_location!
   geocoded_by         :address
   reverse_geocoded_by :coordinates
 
   before_save         :rerank
+
+  # indexes
+  index({ search_tags: 1 })
+  index({ essence_tags: 1 })
+  index({ theme_tags: 1 })
 
   ###
   # rescore!
@@ -83,12 +84,8 @@ class Craft
   end
 
   ###
-  # util
+  # organizers
   ###
-
-  def now_active?
-    return false # +++ TODO, upcomming schedule? recently tweeted?
-  end
 
   # :food, :fitness, :fun, :fab, :fashion, :family, :home
   def has_essence?(essence_tag) has_tag(:essence, essence_tag) end
@@ -100,68 +97,20 @@ class Craft
   def add_theme(theme_tag) add_tag(:theme, theme_tag) end
   def remove_theme(theme_tag) remove_tag(:theme, theme_tag) end
 
-  ###
-  # The Craft's Brand
-  #   name and description:
-  #     Twitter takes precedence, then Facebook, then Yelp
-  #     (Twitter and Facebook are owner created, where as yelp may be crowd sourced)
-  #   website:
-  #     Website url takes precedence, then Twitter, Facebook and Yelp
-  ###
-  def name
-    x = website.name  if website
-    x = yelp.name     if yelp
-    x = facebook.name if facebook
-    x = twitter.name  if twitter
-    x
+  def food_truck?()
+    mobile? and has_essence?(:food)
   end
 
-  def description
-    x = website.description  if website
-    x = yelp.description     if yelp
-    x = facebook.description if facebook
-    x = twitter.description  if twitter
-    x
+  def food_truck=(bool)
+    self.mobile = bool
+    if bool
+      add_essence(:food)
+    else
+      remove_essence(:food) if !bool
+    end
   end
 
-  def website_url
-    return website.url   if website.present?
-    x = yelp.website     if yelp
-    x = facebook.website if facebook
-    x = twitter.website  if twitter
-    x
-  end
-
-  ###
-  # convenience
-  ###
-  def is_mobile?() is_mobile end
-
-  def is_for_food_truck?()
-    is_mobile? and has_essence?(:food)
-  end
-
-  def set_as_food_truck!()
-    self.is_mobile = true
-    add_essence(:food)
-    add_essence(:food_truck)
-  end
-
-  def tweet_stream_id() twitter_craft.present? ? twitter_craft.tweet_stream_id : nil end
-
-  ###
-  # formaters
-  ###
-  def map_pin # can be dropped onto google maps
-    {
-      id: _id,
-      lat: lat,
-      lng: lng,
-      name: name,
-      website: website_url,
-      now_active: now_active?
-    }
-  end
+  def tweet_stream_id() twitter.present? ? twitter.tweet_stream_id : nil end
 
 private
 
@@ -196,12 +145,25 @@ end
 # see for google maps stuff:
 # http://blog.joshsoftware.com/2011/04/13/geolocation-rails-and-mongodb-a-receipe-for-success/
 
+# ###
+# # formaters
+# ###
+# def map_pin # can be dropped onto google maps
+#   {
+#     id: _id,
+#     lat: lat,
+#     lng: lng,
+#     name: name,
+#     website: website_url,
+#     now_active: now_active?
+#   }
+# end
+
 # see :
 # GlobalMaps4Rails
 
 # see:
 # http://stackoverflow.com/questions/6640697/how-do-i-query-objects-near-a-point-with-ruby-geocoder-mongoid
-
 
 # see:
 # http://stackoverflow.com/questions/6366870/how-to-search-for-nearby-users-using-mongoid-rails-and-google-maps
