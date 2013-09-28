@@ -7,15 +7,9 @@ class YelpCraft < WebCraft
 
   embedded_in :craft, inverse_of: :yelp
 
-  alias_method :yelp_id,  :web_craft_id
-  alias_method :yelp_id=, :web_craft_id=
-  alias_method :url, :href  # yelp specifies href as url=http://www.yelp.com/biz/grill-em-all-los-angeles
-  alias_method :url=, :href=
-
-  # aliases for API V2 and V1 backwards compatibility
-  alias_method :photo_url, :image_url
-  alias_method :photo_url=, :image_url=
-
+  alias_attribute :yelp_id,   :web_craft_id
+  alias_attribute :url,       :href       # yelp specifies href as url=http://www.yelp.com/biz/grill-em-all-los-angeles
+  alias_attribute :photo_url, :image_url  # alias for API V2 and V1 backwards compatibility
 end
 
 # don't store yelp ratings and reviews in DB as per Developer Agreement

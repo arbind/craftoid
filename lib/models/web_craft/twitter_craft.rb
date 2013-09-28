@@ -31,18 +31,11 @@ class TwitterCraft < WebCraft
 
   embedded_in :craft, inverse_of: :twitter
 
-  alias_method :twitter_id, :web_craft_id
-  alias_method :twitter_id=, :web_craft_id=
-  # normalize attributes to WebCraft
-  alias_method :url, :website  # twitter specifies website as url
-  alias_method :url=, :website=
-  alias_method :screen_name, :username
-  alias_method :screen_name=, :username=
-  # convenience aliases
-  alias_method :tweet_count, :statuses_count
-  alias_method :tweet_count=, :statuses_count=
+  alias_attribute :twitter_id, :web_craft_id
+  alias_attribute :screen_name, :username
+  alias_attribute :url, :website                # twitter specifies website as url
+  alias_attribute :tweet_count, :statuses_count # for convenienc
   alias_method :protected?, :is_protected
-  alias_method :protected=, :is_protected=
 
   def self.provider_key
     '@'

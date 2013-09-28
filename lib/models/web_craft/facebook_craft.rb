@@ -21,12 +21,9 @@ class FacebookCraft < WebCraft
 
   embedded_in :craft, inverse_of: :facebook
 
-  alias_method :facebook_id, :web_craft_id
-  # normalize attributes for WebCraft
-  alias_method :link, :href  # facebook specifies it href as link=
-  alias_method :link=, :href=
-  alias_method :about, :description
-  alias_method :about=, :description=
+  alias_attribute :facebook_id, :web_craft_id
+  alias_attribute :about, :description
+  alias_attribute :link, :href  # facebook specifies it href as link=
 
   def self.provider_key
     'fb'

@@ -20,4 +20,9 @@ describe :YelpCraft do
 
   it_behaves_like :WebCraft, subclass_info
 
+  it 'aliases yelp_id' do
+    y = YelpCraft.new
+    y.yelp_id = "123"
+    expect(y.web_craft_id).to eq '123'
+  end
 end

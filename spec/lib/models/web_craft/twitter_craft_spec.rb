@@ -20,15 +20,4 @@ describe :TwitterCraft do
 
   it_behaves_like :WebCraft, subclass_info
 
-
-  ##
-  #   Check materializing with an integer id
-  ##
-  it :@@materialize_works_with_integer_id do
-    id = subclass_info[:subject][:id]
-    wc = TwitterCraft.materialize({web_craft_id: id.to_i})
-    wc.should_not be_nil
-    wc.web_craft_id.should eq id.to_s
-  end
-
 end
