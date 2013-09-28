@@ -18,3 +18,13 @@ test/version_tmp
 tmp
 .DS_Store
 dump.rdb
+.idea/
+
+
+
+
+      web_craft_id: facebook_id,
+      href: facebook_href,
+      name: facebook_name,
+      address: facebook_address,
+      description: facebook_profile['description'],
